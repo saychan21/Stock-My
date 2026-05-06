@@ -75,6 +75,12 @@ th{
     color:white;
     padding:10px;
     font-size:12px;
+    cursor:pointer;
+    user-select:none;
+}
+
+th:hover{
+    background:#1d4ed8;
 }
 
 td{
@@ -110,23 +116,24 @@ input{
 }
 
 .card{
-    background:#111827;
-    color:white;
+    background:white;
     border-radius:20px;
     padding:18px;
+    border:1px solid #dbe2f0;
     box-shadow:
-    0 4px 12px rgba(0,0,0,0.2);
+    0 4px 12px rgba(0,0,0,0.08);
 }
 
 .card-title{
     font-size:12px;
-    color:#9ca3af;
+    color:#64748b;
     margin-bottom:10px;
 }
 
 .card-value{
     font-size:20px;
     font-weight:bold;
+    color:#111827;
 }
 
 .profit-plus{
@@ -137,6 +144,14 @@ input{
 .profit-minus{
     color:#ef4444;
     font-weight:bold;
+}
+
+.total-profit-minus{
+    color:#ef4444 !important;
+}
+
+.total-profit-plus{
+    color:#111827;
 }
 
 </style>
@@ -203,25 +218,25 @@ input{
 
 </div>
 
-<table>
+<table id="stockTable">
 
 <thead>
 
 <tr>
-    <th>Ticker</th>
-    <th>주식 정보</th>
-    <th>거래소</th>
-    <th>현재가</th>
-    <th>직전 등락률</th>
-    <th>등락 금액</th>
-    <th>Yield</th>
-    <th>Rate</th>
-    <th>배당주기</th>
-    <th>구매가</th>
-    <th>수량</th>
-    <th>매수금액</th>
-    <th>평가금액</th>
-    <th>손익</th>
+    <th onclick="sortTable(0)">Ticker</th>
+    <th onclick="sortTable(1)">주식 정보</th>
+    <th onclick="sortTable(2)">거래소</th>
+    <th onclick="sortTable(3)">현재가</th>
+    <th onclick="sortTable(4)">직전 등락률</th>
+    <th onclick="sortTable(5)">등락 금액</th>
+    <th onclick="sortTable(6)">Yield</th>
+    <th onclick="sortTable(7)">Rate</th>
+    <th onclick="sortTable(8)">배당주기</th>
+    <th onclick="sortTable(9)">구매가</th>
+    <th onclick="sortTable(10)">수량</th>
+    <th onclick="sortTable(11)">매수금액</th>
+    <th onclick="sortTable(12)">평가금액</th>
+    <th onclick="sortTable(13)">손익</th>
 </tr>
 
 </thead>
@@ -252,7 +267,7 @@ input{
         <div class="card-title">
             총 수익률
         </div>
-        <div class="card-value"
+        <div class="card-value total-profit-plus"
         id="totalProfitRate">0.00%</div>
     </div>
 
@@ -549,9 +564,23 @@ function updateSummary(){
     "totalEval").innerText =
     "$" + totalEval.toFixed(2);
 
+    const totalProfitElement =
     document.getElementById(
-    "totalProfitRate").innerText =
+    "totalProfitRate");
+
+    totalProfitElement.innerText =
     profitRate.toFixed(2) + "%";
+
+    if(profitRate < 0){
+
+        totalProfitElement.className =
+        "card-value total-profit-minus";
+
+    }else{
+
+        totalProfitElement.className =
+        "card-value total-profit-plus";
+    }
 
     document.getElementById(
     "yearlyDividend").innerText =
@@ -665,6 +694,41 @@ function loadData(){
 
     data.forEach(item=>{
         addRow(item);
+    });
+}
+
+function sortTable(columnIndex){
+
+    const tbody =
+    document.getElementById("stockBody");
+
+    const rows =
+    Array.from(tbody.querySelectorAll("tr"));
+
+    rows.sort((a,b)=>{
+
+        let aText =
+        a.children[columnIndex]
+        .innerText.replace(/[$,%+]/g,'');
+
+        let bText =
+        b.children[columnIndex]
+        .innerText.replace(/[$,%+]/g,'');
+
+        let aNum = parseFloat(aText);
+        let bNum = parseFloat(bText);
+
+        if(!isNaN(aNum) && !isNaN(bNum)){
+            return bNum - aNum;
+        }
+
+        return aText.localeCompare(bText);
+    });
+
+    tbody.innerHTML = "";
+
+    rows.forEach(row=>{
+        tbody.appendChild(row);
     });
 }
 
