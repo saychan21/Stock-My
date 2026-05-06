@@ -13,10 +13,6 @@ body{
     padding:20px;
 }
 
-h1{
-    margin-bottom:20px;
-}
-
 table{
     width:100%;
     border-collapse:collapse;
@@ -45,8 +41,8 @@ input{
 button{
     padding:10px 20px;
     font-size:16px;
-    cursor:pointer;
     margin-bottom:15px;
+    cursor:pointer;
 }
 
 </style>
@@ -64,13 +60,10 @@ button{
 <thead>
 <tr>
     <th>Ticker</th>
-    <th>거래소</th>
     <th>현재가</th>
-    <th>직전 등락률</th>
-    <th>등락 금액</th>
-    <th>Yield</th>
-    <th>Rate</th>
-    <th>배당주기</th>
+    <th>등락률</th>
+    <th>고가</th>
+    <th>저가</th>
 </tr>
 </thead>
 
@@ -86,7 +79,6 @@ button{
 <option value="SCHD">
 <option value="SPYD">
 <option value="QYLD">
-<option value="O">
 <option value="TSLA">
 <option value="NVDA">
 <option value="AAPL">
@@ -96,6 +88,8 @@ button{
 </datalist>
 
 <script>
+
+const API_KEY = "여기에_API_KEY";
 
 function addRow(){
 
@@ -108,18 +102,15 @@ function addRow(){
         <td>
             <input
                 list="tickerList"
-                placeholder="예: JEPQ"
+                placeholder="Ticker 입력"
                 onkeydown="handleEnter(event,this)"
             >
         </td>
 
-        <td class="exchange"></td>
         <td class="price"></td>
-        <td class="changePercent"></td>
-        <td class="changeAmount"></td>
-        <td class="yield"></td>
-        <td class="rate"></td>
-        <td class="freq"></td>
+        <td class="change"></td>
+        <td class="high"></td>
+        <td class="low"></td>
 
     `;
 
@@ -144,61 +135,24 @@ async function fetchStock(ticker,row){
     try{
 
         const url =
-        `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`;
+        `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`;
 
-        const proxy =
-        `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
+        const res = await fetch(url);
 
-        const res = await fetch(proxy);
-
-        const text = await res.text();
-
-        const data = JSON.parse(text);
-
-        const info = data.quoteResponse.result[0];
-
-        if(!info){
-
-            alert("Ticker 없음");
-            return;
-        }
-
-        row.querySelector(".exchange").innerText =
-        info.fullExchangeName || "-";
+        const data = await res.json();
 
         row.querySelector(".price").innerText =
-        info.regularMarketPrice || "-";
+        data.c || "-";
 
-        row.querySelector(".changePercent").innerText =
-        (info.regularMarketChangePercent || 0).toFixed(2) + "%";
+        row.querySelector(".change").innerText =
+        data.dp ? data.dp.toFixed(2) + "%" : "-";
 
-        row.querySelector(".changeAmount").innerText =
-        (info.regularMarketChange || 0).toFixed(2);
+        row.querySelector(".high").innerText =
+        data.h || "-";
 
-        row.querySelector(".yield").innerText =
-        ((info.trailingAnnualDividendYield || 0) * 100).toFixed(2) + "%";
+        row.querySelector(".low").innerText =
+        data.l || "-";
 
-        row.querySelector(".rate").innerText =
-        info.trailingAnnualDividendRate || "-";
-
-        let freq = "-";
-
-        const rate = info.trailingAnnualDividendRate || 0;
-
-        if(rate >= 10){
-
-            freq = "Monthly";
-        }
-        else if(rate >= 1){
-
-            freq = "Quarterly";
-        }
-        else if(rate > 0){
-
-            freq = "Year";
-        }
-
-        row.querySelector(".freq").innerText = freq;
     }
 
     catch(e){
@@ -214,4 +168,5 @@ addRow();
 </script>
 
 </body>
+
 </html>
