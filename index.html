@@ -57,18 +57,51 @@ th{
     font-size:15px;
 }
 
+th.portfolio{
+    background:#4b2d7f;
+}
+
 td{
     border:1px solid #ddd;
     text-align:center;
-    padding:6px;
-    height:40px;
+    padding:4px;
+    height:34px;
+}
+
+td.portfolio{
+    background:#f3edff;
 }
 
 .ticker-input{
-    width:100px;
+    width:90px;
     padding:6px;
     font-size:16px;
     text-align:center;
+}
+
+.number-input{
+    width:80px;
+    padding:5px;
+    text-align:center;
+}
+
+.profit-plus{
+    color:green;
+    font-weight:bold;
+}
+
+.profit-minus{
+    color:red;
+    font-weight:bold;
+}
+
+.summary{
+    margin-top:15px;
+    padding:15px;
+    background:white;
+    border:1px solid #ddd;
+    font-size:18px;
+    font-weight:bold;
 }
 </style>
 </head>
@@ -76,7 +109,10 @@ td{
 <body>
 
 <div class="topbar">
-    <div class="title">📊 Dividend Tracker</div>
+
+    <div class="title">
+        📊 Dividend Tracker
+    </div>
 
     <div class="source">
         데이터 출처:
@@ -84,6 +120,7 @@ td{
             Finnhub API
         </a>
     </div>
+
 </div>
 
 <div class="buttons">
@@ -93,7 +130,9 @@ td{
 </div>
 
 <table>
+
 <thead>
+
 <tr>
     <th>Ticker</th>
     <th>거래소</th>
@@ -103,27 +142,40 @@ td{
     <th>Yield</th>
     <th>Rate</th>
     <th>배당주기</th>
+
+    <th class="portfolio">구매가</th>
+    <th class="portfolio">수량</th>
+    <th class="portfolio">매수금액</th>
+    <th class="portfolio">평가금액</th>
+    <th class="portfolio">손익</th>
 </tr>
+
 </thead>
 
-<tbody id="stockBody">
-</tbody>
+<tbody id="stockBody"></tbody>
+
 </table>
+
+<div class="summary" id="summary">
+총 평가금액 : $0
+</div>
 
 <script>
 
 const API_KEY = "d7tfr7pr01qugn0afce0d7tfr7pr01qugn0afceg";
 
-function addRow(tickerValue=""){
+function addRow(data = {}){
+
     const tbody = document.getElementById("stockBody");
 
     const row = document.createElement("tr");
 
     row.innerHTML = `
+
         <td>
             <input
                 class="ticker-input"
-                value="${tickerValue}"
+                value="${data.ticker || ''}"
                 placeholder="JEPQ"
                 onblur="fetchStock(this)"
                 onkeydown="handleEnter(event,this)"
@@ -137,16 +189,40 @@ function addRow(tickerValue=""){
         <td class="yield">-</td>
         <td class="rate">-</td>
         <td class="freq">-</td>
+
+        <td class="portfolio">
+            <input
+                class="number-input buyPrice"
+                type="number"
+                step="0.01"
+                value="${data.buyPrice || ''}"
+                oninput="updatePortfolio(this)"
+            >
+        </td>
+
+        <td class="portfolio">
+            <input
+                class="number-input quantity"
+                type="number"
+                value="${data.quantity || ''}"
+                oninput="updatePortfolio(this)"
+            >
+        </td>
+
+        <td class="portfolio buyTotal">-</td>
+        <td class="portfolio evalTotal">-</td>
+        <td class="portfolio profit">-</td>
     `;
 
     tbody.appendChild(row);
 
-    if(tickerValue){
-        fetchStock(row.querySelector("input"));
+    if(data.ticker){
+        fetchStock(row.querySelector(".ticker-input"));
     }
 }
 
 function handleEnter(event,input){
+
     if(event.key === "Enter"){
         fetchStock(input);
     }
@@ -218,6 +294,8 @@ async function fetchStock(input){
 
         row.querySelector(".freq").innerText = freq;
 
+        updatePortfolio(row);
+
     }catch(err){
 
         console.log(err);
@@ -226,17 +304,91 @@ async function fetchStock(input){
     }
 }
 
+function updatePortfolio(target){
+
+    const row = target.closest("tr");
+
+    const buyPrice =
+        parseFloat(row.querySelector(".buyPrice").value) || 0;
+
+    const quantity =
+        parseFloat(row.querySelector(".quantity").value) || 0;
+
+    const currentPrice =
+        parseFloat(
+            row.querySelector(".price")
+            .innerText
+            .replace("$","")
+        ) || 0;
+
+    const buyTotal = buyPrice * quantity;
+
+    const evalTotal = currentPrice * quantity;
+
+    const profit = evalTotal - buyTotal;
+
+    row.querySelector(".buyTotal").innerText =
+        "$" + buyTotal.toFixed(2);
+
+    row.querySelector(".evalTotal").innerText =
+        "$" + evalTotal.toFixed(2);
+
+    const profitCell = row.querySelector(".profit");
+
+    profitCell.innerText =
+        "$" + profit.toFixed(2);
+
+    profitCell.className = "portfolio profit";
+
+    if(profit > 0){
+        profitCell.classList.add("profit-plus");
+    }
+
+    if(profit < 0){
+        profitCell.classList.add("profit-minus");
+    }
+
+    updateSummary();
+}
+
+function updateSummary(){
+
+    let total = 0;
+
+    document.querySelectorAll(".evalTotal").forEach(cell=>{
+
+        total += parseFloat(
+            cell.innerText.replace("$","")
+        ) || 0;
+    });
+
+    document.getElementById("summary").innerText =
+        "총 평가금액 : $" + total.toFixed(2);
+}
+
 function saveData(){
 
-    const tickers = [];
+    const rows = [];
 
-    document.querySelectorAll(".ticker-input").forEach(input=>{
-        tickers.push(input.value);
+    document.querySelectorAll("#stockBody tr").forEach(row=>{
+
+        rows.push({
+
+            ticker:
+                row.querySelector(".ticker-input").value,
+
+            buyPrice:
+                row.querySelector(".buyPrice").value,
+
+            quantity:
+                row.querySelector(".quantity").value
+        });
+
     });
 
     localStorage.setItem(
-        "dividend_tickers",
-        JSON.stringify(tickers)
+        "dividend_tracker_data",
+        JSON.stringify(rows)
     );
 
     alert("저장 완료");
@@ -245,15 +397,15 @@ function saveData(){
 function loadData(){
 
     const data = JSON.parse(
-        localStorage.getItem("dividend_tickers")
+        localStorage.getItem("dividend_tracker_data")
     );
 
     if(!data) return;
 
     document.getElementById("stockBody").innerHTML = "";
 
-    data.forEach(ticker=>{
-        addRow(ticker);
+    data.forEach(item=>{
+        addRow(item);
     });
 }
 
@@ -261,10 +413,10 @@ loadData();
 
 if(document.getElementById("stockBody").children.length === 0){
 
-    addRow("JEPQ");
-    addRow("SCHD");
-    addRow("NVDA");
-    addRow("GOOGL");
+    addRow({ticker:"JEPQ"});
+    addRow({ticker:"SCHD"});
+    addRow({ticker:"NVDA"});
+    addRow({ticker:"GOOGL"});
 }
 
 </script>
