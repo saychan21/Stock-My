@@ -12,7 +12,7 @@
 
 body{
     margin:0;
-    padding:20px;
+    padding:16px;
     background:#e9eef7;
     font-family:
     "Pretendard",
@@ -24,24 +24,24 @@ body{
     display:flex;
     justify-content:space-between;
     align-items:flex-start;
-    margin-bottom:20px;
+    margin-bottom:16px;
 }
 
 .title{
     display:flex;
     align-items:center;
-    gap:12px;
+    gap:10px;
 }
 
 .title h1{
     margin:0;
-    font-size:28px;
+    font-size:24px;
     color:#2563eb;
 }
 
 .source{
     color:#666;
-    font-size:13px;
+    font-size:12px;
 }
 
 button{
@@ -49,8 +49,8 @@ button{
     background:#2563eb;
     color:white;
     border-radius:10px;
-    padding:10px 18px;
-    font-size:14px;
+    padding:10px 16px;
+    font-size:13px;
     font-weight:600;
     cursor:pointer;
     margin-right:8px;
@@ -74,15 +74,15 @@ th{
     background:#2563eb;
     color:white;
     padding:10px;
-    font-size:13px;
+    font-size:12px;
 }
 
 td{
-    padding:8px;
+    padding:6px;
     border-bottom:
     1px solid #e5e7eb;
     text-align:center;
-    font-size:13px;
+    font-size:12px;
 }
 
 input{
@@ -92,34 +92,34 @@ input{
     border:
     1px solid #cbd5e1;
     text-align:center;
-    font-size:13px;
+    font-size:12px;
 }
 
 .summary{
-    margin-top:25px;
+    margin-top:20px;
     display:grid;
     grid-template-columns:
     repeat(5,1fr);
-    gap:16px;
+    gap:14px;
 }
 
 .card{
     background:#111827;
     color:white;
     border-radius:20px;
-    padding:20px;
+    padding:18px;
     box-shadow:
     0 4px 12px rgba(0,0,0,0.2);
 }
 
 .card-title{
-    font-size:13px;
+    font-size:12px;
     color:#9ca3af;
     margin-bottom:10px;
 }
 
 .card-value{
-    font-size:24px;
+    font-size:20px;
     font-weight:bold;
 }
 
@@ -144,11 +144,11 @@ input{
     <div>
 
         <div class="title">
-            <span style="font-size:34px;">📊</span>
+            <span style="font-size:30px;">📊</span>
             <h1>Dividend Tracker</h1>
         </div>
 
-        <div style="margin-top:16px;">
+        <div style="margin-top:14px;">
 
             <button onclick="addRow()">
                 + 행 추가
@@ -252,8 +252,8 @@ input{
 
 <script>
 
-const WORKER_URL =
-"https://stock-api.saychan21.workers.dev";
+const API_KEY =
+"d7tfr7pr01qugn0afce0d7tfr7pr01qugn0afceg";
 
 let currentSaveName = null;
 
@@ -328,21 +328,29 @@ async function fetchStock(input){
 
     try{
 
-        const res =
+        const quoteRes =
         await fetch(
-        `${WORKER_URL}?symbol=${ticker}`);
+        `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`);
 
-        const data =
-        await res.json();
+        const profileRes =
+        await fetch(
+        `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`);
+
+        const metricRes =
+        await fetch(
+        `https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${API_KEY}`);
 
         const quote =
-        data.quote || {};
+        await quoteRes.json();
 
         const profile =
-        data.profile || {};
+        await profileRes.json();
+
+        const metricData =
+        await metricRes.json();
 
         const metric =
-        data.metric || {};
+        metricData.metric || {};
 
         row.querySelector(".exchange")
         .innerText =
