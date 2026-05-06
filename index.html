@@ -95,6 +95,12 @@ input{
     font-size:12px;
 }
 
+.stockName{
+    font-size:11px;
+    color:#475569;
+    max-width:220px;
+}
+
 .summary{
     margin-top:20px;
     display:grid;
@@ -138,6 +144,23 @@ input{
 </head>
 
 <body>
+
+<datalist id="tickerList">
+
+<option value="JEPQ">
+<option value="SCHD">
+<option value="NVDA">
+<option value="GOOGL">
+<option value="AAPL">
+<option value="MSFT">
+<option value="TSLA">
+<option value="AMZN">
+<option value="META">
+<option value="QQQ">
+<option value="SPY">
+<option value="VOO">
+
+</datalist>
 
 <div class="topbar">
 
@@ -186,6 +209,7 @@ input{
 
 <tr>
     <th>Ticker</th>
+    <th>주식 정보</th>
     <th>거래소</th>
     <th>현재가</th>
     <th>직전 등락률</th>
@@ -269,11 +293,13 @@ function addRow(data = {}){
 
     <td>
         <input
+        list="tickerList"
         value="${data.ticker || ''}"
         onblur="fetchStock(this)"
         onkeydown="handleEnter(event,this)">
     </td>
 
+    <td class="stockName">-</td>
     <td class="exchange">-</td>
     <td class="price">$0.00</td>
     <td class="changePercent">0.00%</td>
@@ -351,6 +377,10 @@ async function fetchStock(input){
 
         const metric =
         metricData.metric || {};
+
+        row.querySelector(".stockName")
+        .innerText =
+        profile.name || "-";
 
         row.querySelector(".exchange")
         .innerText =
@@ -451,19 +481,21 @@ function updatePortfolio(target){
     const profitCell =
     row.querySelector(".profit");
 
-    profitCell.innerText =
-    (profit >= 0 ? "+$":"-$")
-    + Math.abs(profit).toFixed(2);
-
-    profitCell.className =
-    "profit";
-
     if(profit >= 0){
-        profitCell.classList.add(
-        "profit-plus");
+
+        profitCell.innerText =
+        "+$" + profit.toFixed(2);
+
+        profitCell.className =
+        "profit profit-plus";
+
     }else{
-        profitCell.classList.add(
-        "profit-minus");
+
+        profitCell.innerText =
+        "-$" + Math.abs(profit).toFixed(2);
+
+        profitCell.className =
+        "profit profit-minus";
     }
 
     updateSummary();
