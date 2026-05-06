@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
+
 <head>
 <meta charset="UTF-8">
 <title>Dividend Tracker</title>
@@ -49,6 +50,7 @@ button{
 }
 
 </style>
+
 </head>
 
 <body>
@@ -57,7 +59,7 @@ button{
 
 <button onclick="addRow()">+ 행 추가</button>
 
-<table id="stockTable">
+<table>
 
 <thead>
 <tr>
@@ -77,6 +79,22 @@ button{
 
 </table>
 
+<datalist id="tickerList">
+
+<option value="JEPQ">
+<option value="JEPI">
+<option value="SCHD">
+<option value="SPYD">
+<option value="QYLD">
+<option value="O">
+<option value="TSLA">
+<option value="NVDA">
+<option value="AAPL">
+<option value="GOOGL">
+<option value="MSFT">
+
+</datalist>
+
 <script>
 
 function addRow(){
@@ -86,8 +104,9 @@ function addRow(){
     const row = document.createElement("tr");
 
     row.innerHTML = `
+
         <td>
-            <input 
+            <input
                 list="tickerList"
                 placeholder="예: JEPQ"
                 onkeydown="handleEnter(event,this)"
@@ -101,6 +120,7 @@ function addRow(){
         <td class="yield"></td>
         <td class="rate"></td>
         <td class="freq"></td>
+
     `;
 
     tbody.appendChild(row);
@@ -127,11 +147,13 @@ async function fetchStock(ticker,row){
         `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`;
 
         const proxy =
-        `https://corsproxy.io/?${encodeURIComponent(url)}`;
+        `https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
 
         const res = await fetch(proxy);
 
-        const data = await res.json();
+        const text = await res.text();
+
+        const data = JSON.parse(text);
 
         const info = data.quoteResponse.result[0];
 
@@ -164,17 +186,19 @@ async function fetchStock(ticker,row){
         const rate = info.trailingAnnualDividendRate || 0;
 
         if(rate >= 10){
+
             freq = "Monthly";
         }
         else if(rate >= 1){
+
             freq = "Quarterly";
         }
         else if(rate > 0){
+
             freq = "Year";
         }
 
         row.querySelector(".freq").innerText = freq;
-
     }
 
     catch(e){
@@ -183,28 +207,11 @@ async function fetchStock(ticker,row){
 
         alert("API 오류");
     }
-
 }
 
 addRow();
 
 </script>
-
-<datalist id="tickerList">
-
-<option value="JEPQ">
-<option value="JEPI">
-<option value="SCHD">
-<option value="SPYD">
-<option value="QYLD">
-<option value="TSLA">
-<option value="NVDA">
-<option value="AAPL">
-<option value="GOOGL">
-<option value="MSFT">
-<option value="O">
-
-</datalist>
 
 </body>
 </html>
