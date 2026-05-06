@@ -4,105 +4,161 @@
 <meta charset="UTF-8">
 <title>Dividend Tracker</title>
 
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
+
 <style>
+
+*{
+    box-sizing:border-box;
+    font-family:'Pretendard',sans-serif;
+}
+
 body{
-    font-family: Arial;
     margin:0;
-    padding:20px;
-    background:#f5f5f5;
+    padding:24px;
+    background:#eef4ff;
+    color:#1e293b;
 }
 
 .topbar{
     display:flex;
     justify-content:space-between;
     align-items:flex-start;
-    margin-bottom:15px;
+    margin-bottom:20px;
 }
 
 .title{
-    font-size:28px;
-    font-weight:bold;
+    font-size:34px;
+    font-weight:700;
+    color:#2563eb;
 }
 
 .source{
     font-size:14px;
-    color:#666;
+    color:#64748b;
 }
 
 .source a{
-    color:#4a63d8;
+    color:#2563eb;
     text-decoration:none;
 }
 
 .buttons{
-    margin-bottom:15px;
+    margin-bottom:18px;
 }
 
 button{
+    border:none;
+    background:#2563eb;
+    color:white;
     padding:10px 16px;
-    margin-right:6px;
+    border-radius:10px;
     cursor:pointer;
+    margin-right:8px;
+    font-size:14px;
+    font-weight:600;
+    transition:0.2s;
+}
+
+button:hover{
+    background:#1d4ed8;
 }
 
 table{
     width:100%;
     border-collapse:collapse;
     background:white;
+    border-radius:18px;
+    overflow:hidden;
+    box-shadow:0 4px 18px rgba(0,0,0,0.08);
 }
 
 th{
-    background:#1f2940;
+    background:#2563eb;
     color:white;
-    padding:10px;
-    font-size:15px;
+    padding:14px 10px;
+    font-size:14px;
+    font-weight:600;
 }
 
 th.portfolio{
-    background:#4b2d7f;
+    background:#1e40af;
 }
 
 td{
-    border:1px solid #ddd;
+    border-bottom:1px solid #e2e8f0;
     text-align:center;
-    padding:4px;
-    height:34px;
+    padding:10px 8px;
+    font-size:14px;
+    font-weight:500;
+    color:#334155;
 }
 
 td.portfolio{
-    background:#f3edff;
+    background:#f8fbff;
+}
+
+tr:hover{
+    background:#f8fbff;
 }
 
 .ticker-input{
     width:90px;
-    padding:6px;
-    font-size:16px;
+    padding:8px;
+    border:1px solid #cbd5e1;
+    border-radius:8px;
     text-align:center;
+    font-size:14px;
+    background:white;
 }
 
 .number-input{
-    width:80px;
-    padding:5px;
+    width:90px;
+    padding:8px;
+    border:1px solid #cbd5e1;
+    border-radius:8px;
     text-align:center;
+    font-size:14px;
+    background:white;
 }
 
 .profit-plus{
-    color:green;
-    font-weight:bold;
+    color:#16a34a;
+    font-weight:700;
 }
 
 .profit-minus{
-    color:red;
-    font-weight:bold;
+    color:#dc2626;
+    font-weight:700;
 }
 
-.summary{
-    margin-top:15px;
-    padding:15px;
-    background:white;
-    border:1px solid #ddd;
-    font-size:18px;
-    font-weight:bold;
+.summary-wrap{
+    margin-top:20px;
+    display:grid;
+    grid-template-columns:repeat(5,1fr);
+    gap:14px;
 }
+
+.summary-card{
+    background:white;
+    border-radius:16px;
+    padding:18px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.06);
+}
+
+.summary-title{
+    font-size:13px;
+    color:#64748b;
+    margin-bottom:8px;
+}
+
+.summary-value{
+    font-size:24px;
+    font-weight:700;
+    color:#2563eb;
+}
+
 </style>
 </head>
 
@@ -156,8 +212,33 @@ td.portfolio{
 
 </table>
 
-<div class="summary" id="summary">
-총 평가금액 : $0
+<div class="summary-wrap">
+
+    <div class="summary-card">
+        <div class="summary-title">총 구매금액</div>
+        <div class="summary-value" id="totalBuy">$0</div>
+    </div>
+
+    <div class="summary-card">
+        <div class="summary-title">총 평가금액</div>
+        <div class="summary-value" id="totalEval">$0</div>
+    </div>
+
+    <div class="summary-card">
+        <div class="summary-title">총 수익률</div>
+        <div class="summary-value" id="totalProfitRate">0%</div>
+    </div>
+
+    <div class="summary-card">
+        <div class="summary-title">예상 월배당</div>
+        <div class="summary-value" id="monthlyDividend">$0</div>
+    </div>
+
+    <div class="summary-card">
+        <div class="summary-title">예상 연배당</div>
+        <div class="summary-value" id="yearlyDividend">$0</div>
+    </div>
+
 </div>
 
 <script>
@@ -212,6 +293,7 @@ function addRow(data = {}){
         <td class="portfolio buyTotal">-</td>
         <td class="portfolio evalTotal">-</td>
         <td class="portfolio profit">-</td>
+
     `;
 
     tbody.appendChild(row);
@@ -294,6 +376,8 @@ async function fetchStock(input){
 
         row.querySelector(".freq").innerText = freq;
 
+        row.dataset.dividendYield = yieldValue;
+
         updatePortfolio(row);
 
     }catch(err){
@@ -317,8 +401,7 @@ function updatePortfolio(target){
     const currentPrice =
         parseFloat(
             row.querySelector(".price")
-            .innerText
-            .replace("$","")
+            .innerText.replace("$","")
         ) || 0;
 
     const buyTotal = buyPrice * quantity;
@@ -353,20 +436,60 @@ function updatePortfolio(target){
 
 function updateSummary(){
 
-    let total = 0;
+    let totalBuy = 0;
+    let totalEval = 0;
+    let totalDividend = 0;
 
-    document.querySelectorAll(".evalTotal").forEach(cell=>{
+    document.querySelectorAll("#stockBody tr").forEach(row=>{
 
-        total += parseFloat(
-            cell.innerText.replace("$","")
-        ) || 0;
+        const buy =
+            parseFloat(
+                row.querySelector(".buyTotal")
+                .innerText.replace("$","")
+            ) || 0;
+
+        const evalv =
+            parseFloat(
+                row.querySelector(".evalTotal")
+                .innerText.replace("$","")
+            ) || 0;
+
+        const yieldValue =
+            parseFloat(row.dataset.dividendYield || 0);
+
+        totalBuy += buy;
+        totalEval += evalv;
+
+        totalDividend += evalv * (yieldValue / 100);
+
     });
 
-    document.getElementById("summary").innerText =
-        "총 평가금액 : $" + total.toFixed(2);
+    const profitRate =
+        totalBuy > 0
+        ? ((totalEval-totalBuy)/totalBuy)*100
+        : 0;
+
+    document.getElementById("totalBuy").innerText =
+        "$" + totalBuy.toFixed(2);
+
+    document.getElementById("totalEval").innerText =
+        "$" + totalEval.toFixed(2);
+
+    document.getElementById("totalProfitRate").innerText =
+        profitRate.toFixed(2) + "%";
+
+    document.getElementById("yearlyDividend").innerText =
+        "$" + totalDividend.toFixed(2);
+
+    document.getElementById("monthlyDividend").innerText =
+        "$" + (totalDividend/12).toFixed(2);
 }
 
 function saveData(){
+
+    const saveName = prompt("저장 이름 입력");
+
+    if(!saveName) return;
 
     const rows = [];
 
@@ -387,7 +510,7 @@ function saveData(){
     });
 
     localStorage.setItem(
-        "dividend_tracker_data",
+        "portfolio_" + saveName,
         JSON.stringify(rows)
     );
 
@@ -396,11 +519,19 @@ function saveData(){
 
 function loadData(){
 
+    const saveName = prompt("불러올 저장 이름 입력");
+
+    if(!saveName) return;
+
     const data = JSON.parse(
-        localStorage.getItem("dividend_tracker_data")
+        localStorage.getItem("portfolio_" + saveName)
     );
 
-    if(!data) return;
+    if(!data){
+
+        alert("저장 데이터 없음");
+        return;
+    }
 
     document.getElementById("stockBody").innerHTML = "";
 
@@ -409,15 +540,10 @@ function loadData(){
     });
 }
 
-loadData();
-
-if(document.getElementById("stockBody").children.length === 0){
-
-    addRow({ticker:"JEPQ"});
-    addRow({ticker:"SCHD"});
-    addRow({ticker:"NVDA"});
-    addRow({ticker:"GOOGL"});
-}
+addRow({ticker:"JEPQ"});
+addRow({ticker:"SCHD"});
+addRow({ticker:"NVDA"});
+addRow({ticker:"GOOGL"});
 
 </script>
 
