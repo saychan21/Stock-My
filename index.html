@@ -1,71 +1,319 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0">
+
+<title>Dividend Tracker</title>
+
+<style>
+
+body{
+    margin:0;
+    padding:20px;
+    background:#e9eef7;
+    font-family:
+    "Pretendard",
+    "Segoe UI",
+    sans-serif;
+}
+
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-start;
+    margin-bottom:20px;
+}
+
+.title{
+    display:flex;
+    align-items:center;
+    gap:12px;
+}
+
+.title h1{
+    margin:0;
+    font-size:48px;
+    color:#2563eb;
+}
+
+.source{
+    color:#666;
+    font-size:14px;
+}
+
+button{
+    border:none;
+    background:#2563eb;
+    color:white;
+    border-radius:12px;
+    padding:12px 20px;
+    font-size:16px;
+    font-weight:600;
+    cursor:pointer;
+    margin-right:8px;
+}
+
+button:hover{
+    background:#1d4ed8;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    overflow:hidden;
+    border-radius:20px;
+    background:white;
+    box-shadow:
+    0 4px 14px rgba(0,0,0,0.08);
+}
+
+th{
+    background:#2563eb;
+    color:white;
+    padding:14px;
+    font-size:15px;
+}
+
+td{
+    padding:10px;
+    border-bottom:
+    1px solid #e5e7eb;
+    text-align:center;
+    font-size:15px;
+}
+
+input{
+    width:90px;
+    padding:8px;
+    border-radius:10px;
+    border:
+    1px solid #cbd5e1;
+    text-align:center;
+    font-size:15px;
+}
+
+.summary{
+    margin-top:25px;
+    display:grid;
+    grid-template-columns:
+    repeat(5,1fr);
+    gap:16px;
+}
+
+.card{
+    background:#111827;
+    color:white;
+    border-radius:20px;
+    padding:20px;
+    box-shadow:
+    0 4px 12px rgba(0,0,0,0.2);
+}
+
+.card-title{
+    font-size:14px;
+    color:#9ca3af;
+    margin-bottom:10px;
+}
+
+.card-value{
+    font-size:42px;
+    font-weight:bold;
+}
+
+.profit-plus{
+    color:#2563eb;
+    font-weight:bold;
+}
+
+.profit-minus{
+    color:#ef4444;
+    font-weight:bold;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="topbar">
+
+    <div>
+
+        <div class="title">
+            <span style="font-size:40px;">📊</span>
+            <h1>Dividend Tracker</h1>
+        </div>
+
+        <div style="margin-top:16px;">
+
+            <button onclick="addRow()">
+                + 행 추가
+            </button>
+
+            <button onclick="saveCurrent()">
+                💾 저장
+            </button>
+
+            <button onclick="saveAsData()">
+                📂 다른 이름 저장
+            </button>
+
+            <button onclick="loadData()">
+                📁 불러오기
+            </button>
+
+        </div>
+
+    </div>
+
+    <div class="source">
+        데이터 출처:
+        <a href="https://finnhub.io"
+        target="_blank">
+        Finnhub API
+        </a>
+    </div>
+
+</div>
+
+<table>
+
+<thead>
+
+<tr>
+    <th>Ticker</th>
+    <th>거래소</th>
+    <th>현재가</th>
+    <th>직전 등락률</th>
+    <th>등락 금액</th>
+    <th>Yield</th>
+    <th>Rate</th>
+    <th>배당주기</th>
+    <th>구매가</th>
+    <th>수량</th>
+    <th>매수금액</th>
+    <th>평가금액</th>
+    <th>손익</th>
+</tr>
+
+</thead>
+
+<tbody id="stockBody"></tbody>
+
+</table>
+
+<div class="summary">
+
+    <div class="card">
+        <div class="card-title">
+            총 구매금액
+        </div>
+        <div class="card-value"
+        id="totalBuy">$0</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">
+            총 평가금액
+        </div>
+        <div class="card-value"
+        id="totalEval">$0</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">
+            총 수익률
+        </div>
+        <div class="card-value"
+        id="totalProfitRate">0%</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">
+            예상 월배당
+        </div>
+        <div class="card-value"
+        id="monthlyDividend">$0</div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">
+            예상 연배당
+        </div>
+        <div class="card-value"
+        id="yearlyDividend">$0</div>
+    </div>
+
+</div>
+
 <script>
 
-const WORKER_URL =
-"https://stock-api.saychan21.workers.dev";
+const API_KEY =
+"d7tfkc1r01qugn0aenj0d7tfkc1r01qugn0aenjg";
 
 let currentSaveName = null;
 
 function addRow(data = {}){
 
-    const tbody = document.getElementById("stockBody");
+    const tbody =
+    document.getElementById("stockBody");
 
-    const row = document.createElement("tr");
+    const row =
+    document.createElement("tr");
 
     row.innerHTML = `
 
-        <td>
-            <input
-                class="ticker-input"
-                value="${data.ticker || ''}"
-                placeholder="JEPQ"
-                onblur="fetchStock(this)"
-                onkeydown="handleEnter(event,this)"
-            >
-        </td>
+    <td>
+        <input
+        value="${data.ticker || ''}"
+        onblur="fetchStock(this)"
+        onkeydown="handleEnter(event,this)">
+    </td>
 
-        <td class="exchange">-</td>
+    <td class="exchange">-</td>
+    <td class="price">-</td>
+    <td class="changePercent">-</td>
+    <td class="changeAmount">-</td>
+    <td class="yield">-</td>
+    <td class="rate">-</td>
+    <td class="freq">-</td>
 
-        <td class="price">-</td>
-        <td class="changePercent">-</td>
-        <td class="changeAmount">-</td>
-        <td class="yield">-</td>
-        <td class="rate">-</td>
-        <td class="freq">-</td>
+    <td>
+        <input class="buyPrice"
+        type="number"
+        value="${data.buyPrice || ''}"
+        oninput="updatePortfolio(this)">
+    </td>
 
-        <td class="portfolio">
-            <input
-                class="number-input buyPrice"
-                type="number"
-                step="0.01"
-                value="${data.buyPrice || ''}"
-                oninput="updatePortfolio(this)"
-            >
-        </td>
+    <td>
+        <input class="quantity"
+        type="number"
+        value="${data.quantity || ''}"
+        oninput="updatePortfolio(this)">
+    </td>
 
-        <td class="portfolio">
-            <input
-                class="number-input quantity"
-                type="number"
-                value="${data.quantity || ''}"
-                oninput="updatePortfolio(this)"
-            >
-        </td>
-
-        <td class="portfolio buyTotal">-</td>
-        <td class="portfolio evalTotal">-</td>
-        <td class="portfolio profit">-</td>
+    <td class="buyTotal">-</td>
+    <td class="evalTotal">-</td>
+    <td class="profit">-</td>
     `;
 
     tbody.appendChild(row);
 
     if(data.ticker){
-        fetchStock(row.querySelector(".ticker-input"));
+        fetchStock(
+        row.querySelector("input"));
     }
 }
 
 function handleEnter(event,input){
 
-    if(event.key === "Enter"){
+    if(event.key==="Enter"){
         fetchStock(input);
     }
 }
@@ -73,55 +321,68 @@ function handleEnter(event,input){
 async function fetchStock(input){
 
     const ticker =
-        input.value.trim().toUpperCase();
+    input.value.trim().toUpperCase();
 
     if(!ticker) return;
 
-    const row = input.closest("tr");
+    const row =
+    input.closest("tr");
 
     try{
 
-        const res = await fetch(
-            `${WORKER_URL}?symbol=${ticker}`
-        );
+        const quoteRes =
+        await fetch(
+        `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`);
 
-        const data = await res.json();
+        const quote =
+        await quoteRes.json();
 
-        if(data.error){
+        const profileRes =
+        await fetch(
+        `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`);
 
-            row.querySelector(".exchange").innerText =
-                "API ERROR";
+        const profile =
+        await profileRes.json();
 
-            return;
-        }
+        const metricRes =
+        await fetch(
+        `https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${API_KEY}`);
 
-        const quote = data.quote || {};
-        const metric = data.metric || {};
-        const profile = data.profile || {};
+        const metricData =
+        await metricRes.json();
 
-        row.querySelector(".exchange").innerText =
-            profile.exchange || "-";
+        const metric =
+        metricData.metric || {};
 
-        row.querySelector(".price").innerText =
-            "$" + (quote.c || 0).toFixed(2);
+        row.querySelector(".exchange")
+        .innerText =
+        profile.exchange || "-";
 
-        row.querySelector(".changePercent").innerText =
-            (quote.dp || 0).toFixed(2) + "%";
+        row.querySelector(".price")
+        .innerText =
+        "$" + (quote.c || 0).toFixed(2);
 
-        row.querySelector(".changeAmount").innerText =
-            (quote.d || 0).toFixed(2);
+        row.querySelector(".changePercent")
+        .innerText =
+        (quote.dp || 0).toFixed(2) + "%";
+
+        row.querySelector(".changeAmount")
+        .innerText =
+        (quote.d || 0).toFixed(2);
 
         const yieldValue =
-            metric.dividendYieldIndicatedAnnual || 0;
+        metric.dividendYieldIndicatedAnnual || 0;
 
-        row.querySelector(".yield").innerText =
-            yieldValue.toFixed(2) + "%";
+        row.querySelector(".yield")
+        .innerText =
+        yieldValue.toFixed(2) + "%";
 
         const rate =
-            metric.dividendPerShareAnnual || 0;
+        metric.dividendPerShareAnnual || 0;
 
-        row.querySelector(".rate").innerText =
-            rate.toFixed(2);
+        row.querySelector(".rate")
+        .innerText =
+        rate.toFixed(2);
 
         let freq = "-";
 
@@ -133,10 +394,11 @@ async function fetchStock(input){
             freq = "Yearly";
         }
 
-        row.querySelector(".freq").innerText =
-            freq;
+        row.querySelector(".freq")
+        .innerText = freq;
 
-        row.dataset.dividendYield = yieldValue;
+        row.dataset.dividendYield =
+        yieldValue;
 
         updatePortfolio(row);
 
@@ -144,53 +406,66 @@ async function fetchStock(input){
 
         console.log(err);
 
-        row.querySelector(".exchange").innerText =
-            "API ERROR";
+        row.querySelector(".exchange")
+        .innerText =
+        "API ERROR";
     }
 }
 
 function updatePortfolio(target){
 
-    const row = target.closest("tr");
+    const row =
+    target.closest("tr");
 
     const buyPrice =
-        parseFloat(row.querySelector(".buyPrice").value) || 0;
+    parseFloat(
+    row.querySelector(".buyPrice").value)
+    || 0;
 
     const quantity =
-        parseFloat(row.querySelector(".quantity").value) || 0;
+    parseFloat(
+    row.querySelector(".quantity").value)
+    || 0;
 
     const currentPrice =
-        parseFloat(
-            row.querySelector(".price")
-            .innerText.replace("$","")
-        ) || 0;
+    parseFloat(
+    row.querySelector(".price")
+    .innerText.replace("$",""))
+    || 0;
 
-    const buyTotal = buyPrice * quantity;
+    const buyTotal =
+    buyPrice * quantity;
 
-    const evalTotal = currentPrice * quantity;
+    const evalTotal =
+    currentPrice * quantity;
 
-    const profit = evalTotal - buyTotal;
+    const profit =
+    evalTotal - buyTotal;
 
-    row.querySelector(".buyTotal").innerText =
-        "$" + buyTotal.toFixed(2);
+    row.querySelector(".buyTotal")
+    .innerText =
+    "$" + buyTotal.toFixed(2);
 
-    row.querySelector(".evalTotal").innerText =
-        "$" + evalTotal.toFixed(2);
+    row.querySelector(".evalTotal")
+    .innerText =
+    "$" + evalTotal.toFixed(2);
 
-    const profitCell = row.querySelector(".profit");
+    const profitCell =
+    row.querySelector(".profit");
 
     profitCell.innerText =
-        (profit > 0 ? "+$" : "-$") +
-        Math.abs(profit).toFixed(2);
+    (profit >= 0 ? "+$":"-$")
+    + Math.abs(profit).toFixed(2);
 
-    profitCell.className = "portfolio profit";
+    profitCell.className =
+    "profit";
 
-    if(profit > 0){
-        profitCell.classList.add("profit-plus");
-    }
-
-    if(profit < 0){
-        profitCell.classList.add("profit-minus");
+    if(profit >= 0){
+        profitCell.classList.add(
+        "profit-plus");
+    }else{
+        profitCell.classList.add(
+        "profit-minus");
     }
 
     updateSummary();
@@ -202,77 +477,83 @@ function updateSummary(){
     let totalEval = 0;
     let totalDividend = 0;
 
-    document.querySelectorAll("#stockBody tr").forEach(row=>{
+    document
+    .querySelectorAll("#stockBody tr")
+    .forEach(row=>{
 
         const buy =
-            parseFloat(
-                row.querySelector(".buyTotal")
-                .innerText.replace("$","")
-            ) || 0;
+        parseFloat(
+        row.querySelector(".buyTotal")
+        .innerText.replace("$",""))
+        || 0;
 
         const evalv =
-            parseFloat(
-                row.querySelector(".evalTotal")
-                .innerText.replace("$","")
-            ) || 0;
+        parseFloat(
+        row.querySelector(".evalTotal")
+        .innerText.replace("$",""))
+        || 0;
 
         const yieldValue =
-            parseFloat(row.dataset.dividendYield || 0);
+        parseFloat(
+        row.dataset.dividendYield || 0);
 
         totalBuy += buy;
         totalEval += evalv;
 
-        totalDividend += evalv * (yieldValue / 100);
+        totalDividend +=
+        evalv * (yieldValue/100);
 
     });
 
     const profitRate =
-        totalBuy > 0
-        ? ((totalEval-totalBuy)/totalBuy)*100
-        : 0;
+    totalBuy > 0
+    ? ((totalEval-totalBuy)
+/ totalBuy)*100
+    : 0;
 
-    document.getElementById("totalBuy").innerText =
-        "$" + totalBuy.toFixed(2);
+    document.getElementById(
+    "totalBuy").innerText =
+    "$" + totalBuy.toFixed(2);
 
-    document.getElementById("totalEval").innerText =
-        "$" + totalEval.toFixed(2);
+    document.getElementById(
+    "totalEval").innerText =
+    "$" + totalEval.toFixed(2);
 
-    const profitRateEl =
-        document.getElementById("totalProfitRate");
+    document.getElementById(
+    "totalProfitRate").innerText =
+    profitRate.toFixed(2) + "%";
 
-    profitRateEl.innerText =
-        (profitRate > 0 ? "+" : "") +
-        profitRate.toFixed(2) + "%";
+    document.getElementById(
+    "yearlyDividend").innerText =
+    "$" + totalDividend.toFixed(2);
 
-    profitRateEl.style.color =
-        profitRate >= 0
-        ? "#60a5fa"
-        : "#ef4444";
-
-    document.getElementById("yearlyDividend").innerText =
-        "$" + totalDividend.toFixed(2);
-
-    document.getElementById("monthlyDividend").innerText =
-        "$" + (totalDividend/12).toFixed(2);
+    document.getElementById(
+    "monthlyDividend").innerText =
+    "$" +
+    (totalDividend/12).toFixed(2);
 }
 
 function collectRows(){
 
     const rows = [];
 
-    document.querySelectorAll("#stockBody tr")
+    document
+    .querySelectorAll("#stockBody tr")
     .forEach(row=>{
 
         rows.push({
 
             ticker:
-                row.querySelector(".ticker-input").value,
+            row.querySelector("input")
+            .value,
 
             buyPrice:
-                row.querySelector(".buyPrice").value,
+            row.querySelector(".buyPrice")
+            .value,
 
             quantity:
-                row.querySelector(".quantity").value
+            row.querySelector(".quantity")
+            .value
         });
 
     });
@@ -283,15 +564,13 @@ function collectRows(){
 function saveCurrent(){
 
     if(!currentSaveName){
-
         saveAsData();
         return;
     }
 
     localStorage.setItem(
-        "portfolio_" + currentSaveName,
-        JSON.stringify(collectRows())
-    );
+    "portfolio_" + currentSaveName,
+    JSON.stringify(collectRows()));
 
     alert("저장 완료");
 }
@@ -299,61 +578,60 @@ function saveCurrent(){
 function saveAsData(){
 
     const saveName =
-        prompt("새 저장 이름 입력");
+    prompt("저장 이름");
 
     if(!saveName) return;
 
-    currentSaveName = saveName;
+    currentSaveName =
+    saveName;
 
     localStorage.setItem(
-        "portfolio_" + saveName,
-        JSON.stringify(collectRows())
-    );
+    "portfolio_" + saveName,
+    JSON.stringify(collectRows()));
 
-    alert("다른 이름으로 저장 완료");
+    alert("다른 이름 저장 완료");
 }
 
 function loadData(){
 
-    const keys = Object.keys(localStorage)
-        .filter(k =>
-            k.startsWith("portfolio_")
-        );
+    const keys =
+    Object.keys(localStorage)
+    .filter(k =>
+    k.startsWith("portfolio_"));
 
-    if(keys.length === 0){
+    if(keys.length===0){
 
-        alert("저장된 데이터 없음");
+        alert("저장 데이터 없음");
         return;
     }
 
-    const list = keys
-        .map(k =>
-            k.replace("portfolio_","")
-        )
-        .join("\n");
+    const list =
+    keys.map(k =>
+    k.replace("portfolio_",""))
+    .join("\n");
 
     const selected =
-        prompt(
-            "불러올 데이터 선택:\n\n" + list
-        );
+    prompt(
+    "불러올 이름\n\n"+list);
 
     if(!selected) return;
 
-    const data = JSON.parse(
-        localStorage.getItem(
-            "portfolio_" + selected
-        )
-    );
+    const data =
+    JSON.parse(
+    localStorage.getItem(
+    "portfolio_"+selected));
 
     if(!data){
 
-        alert("해당 저장 없음");
+        alert("데이터 없음");
         return;
     }
 
-    currentSaveName = selected;
+    currentSaveName =
+    selected;
 
-    document.getElementById("stockBody").innerHTML = "";
+    document.getElementById(
+    "stockBody").innerHTML = "";
 
     data.forEach(item=>{
         addRow(item);
@@ -366,3 +644,6 @@ addRow({ticker:"NVDA"});
 addRow({ticker:"GOOGL"});
 
 </script>
+
+</body>
+</html>
