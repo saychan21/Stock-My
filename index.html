@@ -1,9 +1,210 @@
 <!DOCTYPE html>
-<html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>Dividend Tracker</title>
+
+<style>
+
+body{
+    font-family:Arial;
+    background:#f5f5f5;
+    padding:20px;
+}
+
+h1{
+    margin-bottom:20px;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+    background:white;
+}
+
+th{
+    background:#243447;
+    color:white;
+    padding:12px;
+}
+
+td{
+    border:1px solid #ddd;
+    padding:10px;
+    text-align:center;
+}
+
+input{
+    width:95%;
+    padding:8px;
+    text-align:center;
+    font-size:16px;
+}
+
+button{
+    padding:10px 20px;
+    font-size:16px;
+    cursor:pointer;
+    margin-bottom:15px;
+}
+
+</style>
+</head>
+
 <body>
 
-<h1>SUCCESS</h1>
+<h1>📊 Dividend Tracker</h1>
+
+<button onclick="addRow()">+ 행 추가</button>
+
+<table id="stockTable">
+
+<thead>
+<tr>
+    <th>Ticker</th>
+    <th>거래소</th>
+    <th>현재가</th>
+    <th>직전 등락률</th>
+    <th>등락 금액</th>
+    <th>Yield</th>
+    <th>Rate</th>
+    <th>배당주기</th>
+</tr>
+</thead>
+
+<tbody id="tbody">
+</tbody>
+
+</table>
+
+<script>
+
+function addRow(){
+
+    const tbody = document.getElementById("tbody");
+
+    const row = document.createElement("tr");
+
+    row.innerHTML = `
+        <td>
+            <input 
+                list="tickerList"
+                placeholder="예: JEPQ"
+                onkeydown="handleEnter(event,this)"
+            >
+        </td>
+
+        <td class="exchange"></td>
+        <td class="price"></td>
+        <td class="changePercent"></td>
+        <td class="changeAmount"></td>
+        <td class="yield"></td>
+        <td class="rate"></td>
+        <td class="freq"></td>
+    `;
+
+    tbody.appendChild(row);
+}
+
+async function handleEnter(event,input){
+
+    if(event.key !== "Enter") return;
+
+    const ticker = input.value.trim().toUpperCase();
+
+    if(!ticker) return;
+
+    const row = input.closest("tr");
+
+    fetchStock(ticker,row);
+}
+
+async function fetchStock(ticker,row){
+
+    try{
+
+        const url =
+        `https://query1.finance.yahoo.com/v7/finance/quote?symbols=${ticker}`;
+
+        const proxy =
+        `https://corsproxy.io/?${encodeURIComponent(url)}`;
+
+        const res = await fetch(proxy);
+
+        const data = await res.json();
+
+        const info = data.quoteResponse.result[0];
+
+        if(!info){
+
+            alert("Ticker 없음");
+            return;
+        }
+
+        row.querySelector(".exchange").innerText =
+        info.fullExchangeName || "-";
+
+        row.querySelector(".price").innerText =
+        info.regularMarketPrice || "-";
+
+        row.querySelector(".changePercent").innerText =
+        (info.regularMarketChangePercent || 0).toFixed(2) + "%";
+
+        row.querySelector(".changeAmount").innerText =
+        (info.regularMarketChange || 0).toFixed(2);
+
+        row.querySelector(".yield").innerText =
+        ((info.trailingAnnualDividendYield || 0) * 100).toFixed(2) + "%";
+
+        row.querySelector(".rate").innerText =
+        info.trailingAnnualDividendRate || "-";
+
+        let freq = "-";
+
+        const rate = info.trailingAnnualDividendRate || 0;
+
+        if(rate >= 10){
+            freq = "Monthly";
+        }
+        else if(rate >= 1){
+            freq = "Quarterly";
+        }
+        else if(rate > 0){
+            freq = "Year";
+        }
+
+        row.querySelector(".freq").innerText = freq;
+
+    }
+
+    catch(e){
+
+        console.log(e);
+
+        alert("API 오류");
+    }
+
+}
+
+addRow();
+
+</script>
+
+<datalist id="tickerList">
+
+<option value="JEPQ">
+<option value="JEPI">
+<option value="SCHD">
+<option value="SPYD">
+<option value="QYLD">
+<option value="TSLA">
+<option value="NVDA">
+<option value="AAPL">
+<option value="GOOGL">
+<option value="MSFT">
+<option value="O">
+
+</datalist>
 
 </body>
 </html>
-<!-- test -->
