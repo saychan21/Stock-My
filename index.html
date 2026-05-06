@@ -10,18 +10,19 @@
 body{
     font-family:Arial;
     background:#f5f5f5;
-    padding:20px;
+    padding:15px;
 }
 
 .topbar{
     display:flex;
     justify-content:space-between;
     align-items:center;
-    margin-bottom:20px;
+    margin-bottom:12px;
 }
 
 h1{
     margin:0;
+    font-size:28px;
 }
 
 .source{
@@ -35,9 +36,9 @@ h1{
 }
 
 button{
-    padding:10px 20px;
-    font-size:16px;
-    margin-bottom:15px;
+    padding:8px 16px;
+    font-size:14px;
+    margin-bottom:12px;
     cursor:pointer;
 }
 
@@ -50,20 +51,33 @@ table{
 th{
     background:#243447;
     color:white;
-    padding:12px;
+    padding:10px 6px;
+    font-size:14px;
 }
 
 td{
     border:1px solid #ddd;
-    padding:10px;
+    padding:6px;
     text-align:center;
+    height:42px;
+    font-size:14px;
 }
 
-input{
-    width:95%;
-    padding:8px;
+/* 🔥 ticker 입력칸 작게 */
+.tickerInput{
+    width:120px;
+    padding:6px;
     text-align:center;
-    font-size:16px;
+    font-size:15px;
+}
+
+/* 일반 셀 너비 */
+.smallCell{
+    width:90px;
+}
+
+.mediumCell{
+    width:130px;
 }
 
 </style>
@@ -91,14 +105,14 @@ input{
 
 <thead>
 <tr>
-    <th>Ticker</th>
-    <th>거래소</th>
-    <th>현재가</th>
-    <th>직전 등락률</th>
-    <th>등락 금액</th>
-    <th>Yield</th>
-    <th>Rate</th>
-    <th>배당주기</th>
+    <th class="smallCell">Ticker</th>
+    <th class="smallCell">거래소</th>
+    <th class="smallCell">현재가</th>
+    <th class="mediumCell">직전 등락률</th>
+    <th class="mediumCell">등락 금액</th>
+    <th class="smallCell">Yield</th>
+    <th class="smallCell">Rate</th>
+    <th class="smallCell">배당주기</th>
 </tr>
 </thead>
 
@@ -125,10 +139,19 @@ input{
 
 <script>
 
-// 🔥 네 API KEY 넣기
-const API_KEY = "여기에_네_API_KEY_입력";
+// 🔥 API KEY
+const API_KEY = "여기에_API_KEY_입력";
 
-function addRow(){
+// 🔥 기본 종목 자동 추가
+const defaultTickers = [
+    "JEPQ",
+    "SCHD",
+    "NVDA",
+    "GOOGL"
+];
+
+// 행 생성
+function addRow(defaultTicker=""){
 
     const tbody = document.getElementById("tbody");
 
@@ -137,11 +160,15 @@ function addRow(){
     row.innerHTML = `
 
         <td>
+
             <input
+                class="tickerInput"
                 list="tickerList"
-                placeholder="예: JEPQ"
-                onkeydown="handleEnter(event,this)"
+                placeholder="JEPQ"
+                value="${defaultTicker}"
+                onchange="tickerChanged(this)"
             >
+
         </td>
 
         <td class="exchange">-</td>
@@ -155,34 +182,39 @@ function addRow(){
     `;
 
     tbody.appendChild(row);
+
+    // 🔥 기본값 있으면 자동 조회
+    if(defaultTicker){
+
+        fetchStock(defaultTicker,row);
+    }
 }
 
-async function handleEnter(event,input){
+// 🔥 엔터 없이 자동 조회
+function tickerChanged(input){
 
-    if(event.key !== "Enter") return;
-
-    const ticker = input.value.trim().toUpperCase();
+    const ticker =
+    input.value.trim().toUpperCase();
 
     if(!ticker) return;
 
-    const row = input.closest("tr");
+    const row =
+    input.closest("tr");
 
     fetchStock(ticker,row);
 }
 
+// API 조회
 async function fetchStock(ticker,row){
 
     try{
 
-        // 현재가 정보
         const quoteUrl =
         `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`;
 
-        // 회사 정보
         const profileUrl =
         `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`;
 
-        // 배당 정보
         const dividendUrl =
         `https://finnhub.io/api/v1/stock/dividend?symbol=${ticker}&from=2024-01-01&to=2025-12-31&token=${API_KEY}`;
 
@@ -196,13 +228,14 @@ async function fetchStock(ticker,row){
             fetch(dividendUrl)
         ]);
 
-        const quote = await quoteRes.json();
-        const profile = await profileRes.json();
-        const dividends = await dividendRes.json();
+        const quote =
+        await quoteRes.json();
 
-        console.log("QUOTE:", quote);
-        console.log("PROFILE:", profile);
-        console.log("DIVIDENDS:", dividends);
+        const profile =
+        await profileRes.json();
+
+        const dividends =
+        await dividendRes.json();
 
         // 거래소
         row.querySelector(".exchange").innerText =
@@ -247,11 +280,11 @@ async function fetchStock(ticker,row){
         row.querySelector(".yield").innerText =
         yieldValue + "%";
 
-        // 배당 Rate
+        // Rate
         row.querySelector(".rate").innerText =
         yearlyDividend.toFixed(2);
 
-        // 배당 주기
+        // 배당주기
         let freq = "-";
 
         if(dividends.length >= 10){
@@ -274,14 +307,18 @@ async function fetchStock(ticker,row){
 
     catch(e){
 
-        console.error(e);
+        console.log(e);
 
-        alert("API 오류 발생");
+        // 🔥 alert 제거
+        console.log("API 오류");
     }
 }
 
-// 기본 행 생성
-addRow();
+// 🔥 기본 종목 자동 생성
+defaultTickers.forEach(ticker => {
+
+    addRow(ticker);
+});
 
 </script>
 
