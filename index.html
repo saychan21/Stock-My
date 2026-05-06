@@ -158,7 +158,7 @@ td{
 <script>
 
 // 🔥 Finnhub API KEY 입력
-const API_KEY = "여기에_실제_API_KEY_입력";
+const API_KEY = "여기에_API_KEY_입력";
 
 // 기본 종목
 const defaultTickers = [
@@ -231,7 +231,7 @@ async function fetchStock(ticker,row){
         // 현재가
         const quoteRes =
         await fetch(
-            `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`
+            `https://corsproxy.io/?https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`
         );
 
         const quote =
@@ -240,7 +240,7 @@ async function fetchStock(ticker,row){
         // 회사 정보
         const profileRes =
         await fetch(
-            `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`
+            `https://corsproxy.io/?https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`
         );
 
         const profile =
@@ -249,7 +249,7 @@ async function fetchStock(ticker,row){
         // 배당 정보
         const dividendRes =
         await fetch(
-            `https://finnhub.io/api/v1/stock/dividend?symbol=${ticker}&from=2024-01-01&to=2025-12-31&token=${API_KEY}`
+            `https://corsproxy.io/?https://finnhub.io/api/v1/stock/dividend?symbol=${ticker}&from=2024-01-01&to=2025-12-31&token=${API_KEY}`
         );
 
         const dividends =
