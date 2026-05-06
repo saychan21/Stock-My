@@ -13,12 +13,18 @@ body{
     padding:20px;
 }
 
+.topbar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:20px;
+}
+
 h1{
-    margin-bottom:10px;
+    margin:0;
 }
 
 .source{
-    margin-bottom:20px;
     color:#666;
     font-size:14px;
 }
@@ -26,6 +32,13 @@ h1{
 .source a{
     color:#0077cc;
     text-decoration:none;
+}
+
+button{
+    padding:10px 20px;
+    font-size:16px;
+    margin-bottom:15px;
+    cursor:pointer;
 }
 
 table{
@@ -53,26 +66,23 @@ input{
     font-size:16px;
 }
 
-button{
-    padding:10px 20px;
-    font-size:16px;
-    margin-bottom:15px;
-    cursor:pointer;
-}
-
 </style>
 
 </head>
 
 <body>
 
-<h1>📊 Dividend Tracker</h1>
+<div class="topbar">
 
-<div class="source">
-데이터 출처:
-<a href="https://finnhub.io" target="_blank">
-Finnhub API
-</a>
+    <h1>📊 Dividend Tracker</h1>
+
+    <div class="source">
+        데이터 출처:
+        <a href="https://finnhub.io" target="_blank">
+            Finnhub API
+        </a>
+    </div>
+
 </div>
 
 <button onclick="addRow()">+ 행 추가</button>
@@ -115,7 +125,8 @@ Finnhub API
 
 <script>
 
-const API_KEY = "여기에_API_KEY";
+// 🔥 네 API KEY 넣기
+const API_KEY = "여기에_네_API_KEY_입력";
 
 function addRow(){
 
@@ -133,13 +144,13 @@ function addRow(){
             >
         </td>
 
-        <td class="exchange"></td>
-        <td class="price"></td>
-        <td class="changePercent"></td>
-        <td class="changeAmount"></td>
-        <td class="yield"></td>
-        <td class="rate"></td>
-        <td class="freq"></td>
+        <td class="exchange">-</td>
+        <td class="price">-</td>
+        <td class="changePercent">-</td>
+        <td class="changeAmount">-</td>
+        <td class="yield">-</td>
+        <td class="rate">-</td>
+        <td class="freq">-</td>
 
     `;
 
@@ -163,52 +174,84 @@ async function fetchStock(ticker,row){
 
     try{
 
+        // 현재가 정보
         const quoteUrl =
         `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`;
 
+        // 회사 정보
         const profileUrl =
         `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`;
 
+        // 배당 정보
         const dividendUrl =
         `https://finnhub.io/api/v1/stock/dividend?symbol=${ticker}&from=2024-01-01&to=2025-12-31&token=${API_KEY}`;
 
-        const quoteRes = await fetch(quoteUrl);
-        const profileRes = await fetch(profileUrl);
-        const dividendRes = await fetch(dividendUrl);
+        const [
+            quoteRes,
+            profileRes,
+            dividendRes
+        ] = await Promise.all([
+            fetch(quoteUrl),
+            fetch(profileUrl),
+            fetch(dividendUrl)
+        ]);
 
         const quote = await quoteRes.json();
         const profile = await profileRes.json();
         const dividends = await dividendRes.json();
 
+        console.log("QUOTE:", quote);
+        console.log("PROFILE:", profile);
+        console.log("DIVIDENDS:", dividends);
+
+        // 거래소
         row.querySelector(".exchange").innerText =
         profile.exchange || "-";
 
+        // 현재가
         row.querySelector(".price").innerText =
         quote.c || "-";
 
+        // 등락률
         row.querySelector(".changePercent").innerText =
-        quote.dp ? quote.dp.toFixed(2) + "%" : "-";
+        quote.dp
+        ? quote.dp.toFixed(2) + "%"
+        : "-";
 
+        // 등락 금액
         row.querySelector(".changeAmount").innerText =
-        quote.d ? quote.d.toFixed(2) : "-";
+        quote.d
+        ? quote.d.toFixed(2)
+        : "-";
 
+        // 연 배당 합산
         let yearlyDividend = 0;
 
-        dividends.forEach(d => {
-            yearlyDividend += d.amount;
-        });
+        if(Array.isArray(dividends)){
 
-        const yieldValue =
-        quote.c
-        ? ((yearlyDividend / quote.c) * 100).toFixed(2)
-        : 0;
+            dividends.forEach(d => {
+
+                yearlyDividend += d.amount || 0;
+            });
+        }
+
+        // Yield 계산
+        let yieldValue = 0;
+
+        if(quote.c){
+
+            yieldValue =
+            ((yearlyDividend / quote.c) * 100).toFixed(2);
+        }
 
         row.querySelector(".yield").innerText =
         yieldValue + "%";
 
+        // 배당 Rate
         row.querySelector(".rate").innerText =
         yearlyDividend.toFixed(2);
 
+        // 배당 주기
         let freq = "-";
 
         if(dividends.length >= 10){
@@ -221,20 +264,23 @@ async function fetchStock(ticker,row){
         }
         else if(dividends.length >= 1){
 
-            freq = "Year";
+            freq = "Yearly";
         }
 
-        row.querySelector(".freq").innerText = freq;
+        row.querySelector(".freq").innerText =
+        freq;
+
     }
 
     catch(e){
 
-        console.log(e);
+        console.error(e);
 
-        alert("API 오류");
+        alert("API 오류 발생");
     }
 }
 
+// 기본 행 생성
 addRow();
 
 </script>
