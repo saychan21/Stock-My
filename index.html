@@ -1,252 +1,7 @@
-<!DOCTYPE html>
-<html lang="ko">
-<head>
-<meta charset="UTF-8">
-<title>Dividend Tracker</title>
-
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Pretendard:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-<style>
-
-*{
-    box-sizing:border-box;
-    font-family:'Pretendard',sans-serif;
-}
-
-body{
-    margin:0;
-    padding:24px;
-    background:#eef4ff;
-    color:#1e293b;
-}
-
-.topbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    margin-bottom:20px;
-}
-
-.title{
-    font-size:34px;
-    font-weight:700;
-    color:#2563eb;
-}
-
-.source{
-    font-size:14px;
-    color:#64748b;
-}
-
-.source a{
-    color:#2563eb;
-    text-decoration:none;
-}
-
-.buttons{
-    margin-bottom:18px;
-}
-
-button{
-    border:none;
-    background:#2563eb;
-    color:white;
-    padding:10px 16px;
-    border-radius:10px;
-    cursor:pointer;
-    margin-right:8px;
-    font-size:14px;
-    font-weight:600;
-    transition:0.2s;
-}
-
-button:hover{
-    background:#1d4ed8;
-}
-
-table{
-    width:100%;
-    border-collapse:collapse;
-    background:white;
-    border-radius:18px;
-    overflow:hidden;
-    box-shadow:0 4px 18px rgba(0,0,0,0.08);
-}
-
-th{
-    background:#2563eb;
-    color:white;
-    padding:14px 10px;
-    font-size:14px;
-    font-weight:600;
-}
-
-th.portfolio{
-    background:#1e40af;
-}
-
-td{
-    border-bottom:1px solid #e2e8f0;
-    text-align:center;
-    padding:8px;
-    font-size:14px;
-    font-weight:500;
-    color:#334155;
-}
-
-td.portfolio{
-    background:#f8fbff;
-}
-
-tr:hover{
-    background:#f8fbff;
-}
-
-.ticker-input{
-    width:110px;
-    padding:8px;
-    border:1px solid #cbd5e1;
-    border-radius:8px;
-    text-align:center;
-    font-size:14px;
-}
-
-.exchange{
-    min-width:260px;
-}
-
-.number-input{
-    width:90px;
-    padding:8px;
-    border:1px solid #cbd5e1;
-    border-radius:8px;
-    text-align:center;
-    font-size:14px;
-}
-
-.profit-plus{
-    color:#2563eb !important;
-    font-weight:700;
-}
-
-.profit-minus{
-    color:#dc2626 !important;
-    font-weight:700;
-}
-
-.summary-wrap{
-    margin-top:20px;
-    display:grid;
-    grid-template-columns:repeat(5,1fr);
-    gap:14px;
-}
-
-.summary-card{
-    background:#000;
-    border-radius:16px;
-    padding:18px;
-    box-shadow:0 4px 14px rgba(0,0,0,0.2);
-}
-
-.summary-title{
-    font-size:13px;
-    color:#9ca3af;
-    margin-bottom:8px;
-}
-
-.summary-value{
-    font-size:24px;
-    font-weight:700;
-    color:white;
-}
-
-</style>
-</head>
-
-<body>
-
-<div class="topbar">
-
-    <div class="title">
-        📊 Dividend Tracker
-    </div>
-
-    <div class="source">
-        데이터 출처:
-        <a href="https://finnhub.io/" target="_blank">
-            Finnhub API
-        </a>
-    </div>
-
-</div>
-
-<div class="buttons">
-    <button onclick="addRow()">+ 행 추가</button>
-    <button onclick="saveCurrent()">💾 저장</button>
-    <button onclick="saveAsData()">📝 다른 이름 저장</button>
-    <button onclick="loadData()">📂 불러오기</button>
-</div>
-
-<table>
-
-<thead>
-
-<tr>
-    <th>Ticker</th>
-    <th>거래소</th>
-    <th>현재가</th>
-    <th>직전 등락률</th>
-    <th>등락 금액</th>
-    <th>Yield</th>
-    <th>Rate</th>
-    <th>배당주기</th>
-
-    <th class="portfolio">구매가</th>
-    <th class="portfolio">수량</th>
-    <th class="portfolio">매수금액</th>
-    <th class="portfolio">평가금액</th>
-    <th class="portfolio">손익</th>
-</tr>
-
-</thead>
-
-<tbody id="stockBody"></tbody>
-
-</table>
-
-<div class="summary-wrap">
-
-    <div class="summary-card">
-        <div class="summary-title">총 구매금액</div>
-        <div class="summary-value" id="totalBuy">$0</div>
-    </div>
-
-    <div class="summary-card">
-        <div class="summary-title">총 평가금액</div>
-        <div class="summary-value" id="totalEval">$0</div>
-    </div>
-
-    <div class="summary-card">
-        <div class="summary-title">총 수익률</div>
-        <div class="summary-value" id="totalProfitRate">0%</div>
-    </div>
-
-    <div class="summary-card">
-        <div class="summary-title">예상 월배당</div>
-        <div class="summary-value" id="monthlyDividend">$0</div>
-    </div>
-
-    <div class="summary-card">
-        <div class="summary-title">예상 연배당</div>
-        <div class="summary-value" id="yearlyDividend">$0</div>
-    </div>
-
-</div>
-
 <script>
 
-const API_KEY = "d7tfkc1r01qugn0aenj0d7tfkc1r01qugn0aenjg";
+const WORKER_URL =
+"https://stock-api.saychan21.workers.dev";
 
 let currentSaveName = null;
 
@@ -326,38 +81,26 @@ async function fetchStock(input){
 
     try{
 
-        const searchRes = await fetch(
-            `https://finnhub.io/api/v1/search?q=${ticker}&token=${API_KEY}`
+        const res = await fetch(
+            `${WORKER_URL}?symbol=${ticker}`
         );
 
-        const searchData = await searchRes.json();
+        const data = await res.json();
 
-        if(!searchData.result || searchData.result.length === 0){
+        if(data.error){
 
-            row.querySelector(".exchange").innerText = "NOT FOUND";
+            row.querySelector(".exchange").innerText =
+                "API ERROR";
+
             return;
         }
 
-        const stock = searchData.result[0];
-
-        const symbol = stock.symbol;
-
-        const quoteRes = await fetch(
-            `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`
-        );
-
-        const quote = await quoteRes.json();
-
-        const metricRes = await fetch(
-            `https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${API_KEY}`
-        );
-
-        const metricData = await metricRes.json();
-
-        const metric = metricData.metric || {};
+        const quote = data.quote || {};
+        const metric = data.metric || {};
+        const profile = data.profile || {};
 
         row.querySelector(".exchange").innerText =
-            stock.description || stock.exchange || "-";
+            profile.exchange || "-";
 
         row.querySelector(".price").innerText =
             "$" + (quote.c || 0).toFixed(2);
@@ -623,6 +366,3 @@ addRow({ticker:"NVDA"});
 addRow({ticker:"GOOGL"});
 
 </script>
-
-</body>
-</html>
