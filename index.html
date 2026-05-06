@@ -1,47 +1,45 @@
 <!DOCTYPE html>
 <html lang="ko">
-
 <head>
 <meta charset="UTF-8">
 <title>Dividend Tracker</title>
 
 <style>
-
 body{
-    font-family:Arial;
+    font-family: Arial;
+    margin:0;
+    padding:20px;
     background:#f5f5f5;
-    padding:15px;
 }
 
 .topbar{
     display:flex;
     justify-content:space-between;
-    align-items:center;
-    margin-bottom:12px;
+    align-items:flex-start;
+    margin-bottom:15px;
 }
 
-h1{
-    margin:0;
+.title{
     font-size:28px;
+    font-weight:bold;
 }
 
 .source{
-    color:#666;
     font-size:14px;
+    color:#666;
 }
 
 .source a{
-    color:#0077cc;
+    color:#4a63d8;
     text-decoration:none;
 }
 
-.buttonArea{
-    margin-bottom:12px;
+.buttons{
+    margin-bottom:15px;
 }
 
 button{
-    padding:8px 16px;
-    font-size:14px;
+    padding:10px 16px;
     margin-right:6px;
     cursor:pointer;
 }
@@ -53,142 +51,83 @@ table{
 }
 
 th{
-    background:#243447;
+    background:#1f2940;
     color:white;
-    padding:10px 6px;
-    font-size:14px;
+    padding:10px;
+    font-size:15px;
 }
 
 td{
     border:1px solid #ddd;
-    padding:6px;
     text-align:center;
-    height:42px;
-    font-size:14px;
-}
-
-.tickerInput{
-    width:90px;
     padding:6px;
+    height:40px;
+}
+
+.ticker-input{
+    width:100px;
+    padding:6px;
+    font-size:16px;
     text-align:center;
-    font-size:15px;
 }
-
-.smallCell{
-    width:90px;
-}
-
-.mediumCell{
-    width:130px;
-}
-
 </style>
-
 </head>
 
 <body>
 
 <div class="topbar">
-
-    <h1>📊 Dividend Tracker</h1>
+    <div class="title">📊 Dividend Tracker</div>
 
     <div class="source">
         데이터 출처:
-        <a href="https://finnhub.io" target="_blank">
+        <a href="https://finnhub.io/" target="_blank">
             Finnhub API
         </a>
     </div>
-
 </div>
 
-<div class="buttonArea">
-
-    <button onclick="addRow()">
-        + 행 추가
-    </button>
-
-    <button onclick="saveData()">
-        💾 저장
-    </button>
-
-    <button onclick="loadData()">
-        📂 불러오기
-    </button>
-
+<div class="buttons">
+    <button onclick="addRow()">+ 행 추가</button>
+    <button onclick="saveData()">💾 저장</button>
+    <button onclick="loadData()">📂 불러오기</button>
 </div>
 
 <table>
-
 <thead>
 <tr>
-
-    <th class="smallCell">Ticker</th>
-    <th class="smallCell">거래소</th>
-    <th class="smallCell">현재가</th>
-    <th class="mediumCell">직전 등락률</th>
-    <th class="mediumCell">등락 금액</th>
-    <th class="smallCell">Yield</th>
-    <th class="smallCell">Rate</th>
-    <th class="smallCell">배당주기</th>
-
+    <th>Ticker</th>
+    <th>거래소</th>
+    <th>현재가</th>
+    <th>직전 등락률</th>
+    <th>등락 금액</th>
+    <th>Yield</th>
+    <th>Rate</th>
+    <th>배당주기</th>
 </tr>
 </thead>
 
-<tbody id="tbody">
+<tbody id="stockBody">
 </tbody>
-
 </table>
-
-<datalist id="tickerList">
-
-<option value="JEPQ">
-<option value="JEPI">
-<option value="SCHD">
-<option value="SPYD">
-<option value="QYLD">
-<option value="O">
-<option value="TSLA">
-<option value="NVDA">
-<option value="AAPL">
-<option value="GOOGL">
-<option value="MSFT">
-
-</datalist>
 
 <script>
 
-// 🔥 Finnhub API KEY 입력
-const API_KEY = "여기에_API_KEY_입력";
+const API_KEY = "d7tfr7pr01qugn0afce0d7tfr7pr01qugn0afceg";
 
-// 기본 종목
-const defaultTickers = [
-    "JEPQ",
-    "SCHD",
-    "NVDA",
-    "GOOGL"
-];
+function addRow(tickerValue=""){
+    const tbody = document.getElementById("stockBody");
 
-// 행 생성
-function addRow(defaultTicker=""){
-
-    const tbody =
-    document.getElementById("tbody");
-
-    const row =
-    document.createElement("tr");
+    const row = document.createElement("tr");
 
     row.innerHTML = `
-
         <td>
-
             <input
-                class="tickerInput"
-                list="tickerList"
+                class="ticker-input"
+                value="${tickerValue}"
                 placeholder="JEPQ"
-                value="${defaultTicker}"
-                onchange="tickerChanged(this)"
+                onblur="fetchStock(this)"
+                onkeydown="handleEnter(event,this)"
             >
-
         </td>
 
         <td class="exchange">-</td>
@@ -198,216 +137,135 @@ function addRow(defaultTicker=""){
         <td class="yield">-</td>
         <td class="rate">-</td>
         <td class="freq">-</td>
-
     `;
 
     tbody.appendChild(row);
 
-    if(defaultTicker){
-
-        fetchStock(defaultTicker,row);
+    if(tickerValue){
+        fetchStock(row.querySelector("input"));
     }
 }
 
-// ticker 변경 시 자동 조회
-function tickerChanged(input){
+function handleEnter(event,input){
+    if(event.key === "Enter"){
+        fetchStock(input);
+    }
+}
 
-    const ticker =
-    input.value.trim().toUpperCase();
+async function fetchStock(input){
+
+    const ticker = input.value.trim().toUpperCase();
 
     if(!ticker) return;
 
-    const row =
-    input.closest("tr");
-
-    fetchStock(ticker,row);
-}
-
-// API 조회
-async function fetchStock(ticker,row){
+    const row = input.closest("tr");
 
     try{
 
-        // 현재가
-        const quoteRes =
-        await fetch(
-            `https://corsproxy.io/?https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`
+        const quoteRes = await fetch(
+            `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`
         );
 
-        const quote =
-        await quoteRes.json();
+        const quote = await quoteRes.json();
 
-        // 회사 정보
-        const profileRes =
-        await fetch(
-            `https://corsproxy.io/?https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`
+        const profileRes = await fetch(
+            `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`
         );
 
-        const profile =
-        await profileRes.json();
+        const profile = await profileRes.json();
 
-        // 배당 정보
-        const dividendRes =
-        await fetch(
-            `https://corsproxy.io/?https://finnhub.io/api/v1/stock/dividend?symbol=${ticker}&from=2024-01-01&to=2025-12-31&token=${API_KEY}`
+        const metricRes = await fetch(
+            `https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${API_KEY}`
         );
 
-        const dividends =
-        await dividendRes.json();
+        const metricData = await metricRes.json();
 
-        // API 오류 확인
-        if(quote.error){
+        const metric = metricData.metric || {};
 
-            console.log(quote.error);
-
-            row.querySelector(".exchange").innerText =
-            "API ERROR";
-
-            return;
-        }
-
-        // 거래소
         row.querySelector(".exchange").innerText =
-        profile.exchange || "-";
+            profile.exchange || "-";
 
-        // 현재가
         row.querySelector(".price").innerText =
-        quote.c
-        ? "$" + quote.c.toFixed(2)
-        : "-";
+            quote.c ? "$" + quote.c.toFixed(2) : "-";
 
-        // 등락률
         row.querySelector(".changePercent").innerText =
-        quote.dp
-        ? quote.dp.toFixed(2) + "%"
-        : "0%";
+            quote.dp ? quote.dp.toFixed(2) + "%" : "-";
 
-        // 등락 금액
         row.querySelector(".changeAmount").innerText =
-        quote.d
-        ? "$" + quote.d.toFixed(2)
-        : "$0";
+            quote.d ? quote.d.toFixed(2) : "-";
 
-        // 연 배당금
-        let yearlyDividend = 0;
-
-        if(Array.isArray(dividends)){
-
-            dividends.forEach(d => {
-
-                yearlyDividend += d.amount || 0;
-            });
-        }
-
-        // Yield 계산
-        let yieldValue = 0;
-
-        if(quote.c && yearlyDividend){
-
-            yieldValue =
-            ((yearlyDividend / quote.c) * 100).toFixed(2);
-        }
+        const yieldValue =
+            metric.dividendYieldIndicatedAnnual || 0;
 
         row.querySelector(".yield").innerText =
-        yieldValue + "%";
+            yieldValue.toFixed(2) + "%";
 
-        // 배당금
+        const rate =
+            metric.dividendPerShareAnnual || 0;
+
         row.querySelector(".rate").innerText =
-        yearlyDividend.toFixed(2);
+            rate.toFixed(2);
 
-        // 배당 주기
         let freq = "-";
 
-        if(dividends.length >= 10){
-
+        if(rate >= 10){
             freq = "Monthly";
-        }
-        else if(dividends.length >= 4){
-
+        }else if(rate >= 1){
             freq = "Quarterly";
-        }
-        else if(dividends.length >= 1){
-
+        }else if(rate > 0){
             freq = "Yearly";
         }
 
-        row.querySelector(".freq").innerText =
-        freq;
-    }
+        row.querySelector(".freq").innerText = freq;
 
-    catch(e){
+    }catch(err){
 
-        console.log(e);
+        console.log(err);
 
-        row.querySelector(".exchange").innerText =
-        "ERROR";
+        row.querySelector(".exchange").innerText = "API ERROR";
     }
 }
 
-// 저장
 function saveData(){
 
-    const rows =
-    document.querySelectorAll("#tbody tr");
+    const tickers = [];
 
-    const data = [];
-
-    rows.forEach(row => {
-
-        const ticker =
-        row.querySelector(".tickerInput").value;
-
-        if(ticker){
-
-            data.push(ticker);
-        }
+    document.querySelectorAll(".ticker-input").forEach(input=>{
+        tickers.push(input.value);
     });
 
     localStorage.setItem(
-        "dividendTracker",
-        JSON.stringify(data)
+        "dividend_tickers",
+        JSON.stringify(tickers)
     );
 
     alert("저장 완료");
 }
 
-// 불러오기
 function loadData(){
 
-    const saved =
-    localStorage.getItem("dividendTracker");
+    const data = JSON.parse(
+        localStorage.getItem("dividend_tickers")
+    );
 
-    if(!saved) return;
+    if(!data) return;
 
-    const tickers =
-    JSON.parse(saved);
+    document.getElementById("stockBody").innerHTML = "";
 
-    document.getElementById("tbody").innerHTML = "";
-
-    tickers.forEach(ticker => {
-
+    data.forEach(ticker=>{
         addRow(ticker);
     });
 }
 
-// 최초 실행
-window.onload = () => {
+loadData();
 
-    const saved =
-    localStorage.getItem("dividendTracker");
+if(document.getElementById("stockBody").children.length === 0){
 
-    if(saved){
-
-        loadData();
-    }
-    else{
-
-        defaultTickers.forEach(ticker => {
-
-            addRow(ticker);
-        });
-    }
-};
+    addRow("JEPQ");
+    addRow("SCHD");
+    addRow("NVDA");
+    addRow("GOOGL");
+}
 
 </script>
 
