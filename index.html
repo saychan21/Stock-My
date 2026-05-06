@@ -104,13 +104,22 @@ tr:hover{
 }
 
 .ticker-input{
-    width:90px;
+    width:110px;
     padding:8px;
     border:1px solid #cbd5e1;
     border-radius:8px;
     text-align:center;
     font-size:14px;
     background:white;
+}
+
+.exchange-select{
+    width:130px;
+    padding:8px;
+    border:1px solid #cbd5e1;
+    border-radius:8px;
+    background:white;
+    font-size:13px;
 }
 
 .number-input{
@@ -124,12 +133,12 @@ tr:hover{
 }
 
 .profit-plus{
-    color:#16a34a;
+    color:#2563eb !important;
     font-weight:700;
 }
 
 .profit-minus{
-    color:#dc2626;
+    color:#dc2626 !important;
     font-weight:700;
 }
 
@@ -141,22 +150,22 @@ tr:hover{
 }
 
 .summary-card{
-    background:white;
+    background:#000;
     border-radius:16px;
     padding:18px;
-    box-shadow:0 4px 14px rgba(0,0,0,0.06);
+    box-shadow:0 4px 14px rgba(0,0,0,0.2);
 }
 
 .summary-title{
     font-size:13px;
-    color:#64748b;
+    color:#9ca3af;
     margin-bottom:8px;
 }
 
 .summary-value{
     font-size:24px;
     font-weight:700;
-    color:#2563eb;
+    color:#2f2f2f;
 }
 
 </style>
@@ -181,7 +190,8 @@ tr:hover{
 
 <div class="buttons">
     <button onclick="addRow()">+ 행 추가</button>
-    <button onclick="saveData()">💾 저장</button>
+    <button onclick="saveCurrent()">💾 저장</button>
+    <button onclick="saveAsData()">📝 다른 이름 저장</button>
     <button onclick="loadData()">📂 불러오기</button>
 </div>
 
@@ -243,7 +253,9 @@ tr:hover{
 
 <script>
 
-const API_KEY = "d7tfr7pr01qugn0afce0d7tfr7pr01qugn0afceg";
+const API_KEY = "YOUR_API_KEY";
+
+let currentSaveName = null;
 
 function addRow(data = {}){
 
@@ -258,12 +270,33 @@ function addRow(data = {}){
                 class="ticker-input"
                 value="${data.ticker || ''}"
                 placeholder="JEPQ"
+                autocomplete="off"
+                spellcheck="false"
+                list="tickerList"
                 onblur="fetchStock(this)"
                 onkeydown="handleEnter(event,this)"
             >
+
+            <datalist id="tickerList">
+                <option value="JEPQ">
+                <option value="SCHD">
+                <option value="VOO">
+                <option value="SPY">
+                <option value="QQQ">
+                <option value="NVDA">
+                <option value="AAPL">
+                <option value="TSLA">
+                <option value="MSFT">
+                <option value="GOOGL">
+            </datalist>
         </td>
 
-        <td class="exchange">-</td>
+        <td class="exchange">
+            <select class="exchange-select">
+                <option value="">거래소 선택</option>
+            </select>
+        </td>
+
         <td class="price">-</td>
         <td class="changePercent">-</td>
         <td class="changeAmount">-</td>
@@ -293,10 +326,29 @@ function addRow(data = {}){
         <td class="portfolio buyTotal">-</td>
         <td class="portfolio evalTotal">-</td>
         <td class="portfolio profit">-</td>
-
     `;
 
     tbody.appendChild(row);
+
+    const exchangeSelect =
+        row.querySelector(".exchange-select");
+
+    exchangeSelect.addEventListener("change", ()=>{
+
+        fetchStock(
+            row.querySelector(".ticker-input")
+        );
+    });
+
+    if(data.exchange){
+
+        exchangeSelect.innerHTML =
+            `<option value="${data.exchange}">
+                ${data.exchange}
+            </option>`;
+
+        exchangeSelect.value = data.exchange;
+    }
 
     if(data.ticker){
         fetchStock(row.querySelector(".ticker-input"));
@@ -312,45 +364,106 @@ function handleEnter(event,input){
 
 async function fetchStock(input){
 
-    const ticker = input.value.trim().toUpperCase();
+    const ticker =
+        input.value.trim().toUpperCase();
 
     if(!ticker) return;
 
     const row = input.closest("tr");
 
+    const exchangeSelect =
+        row.querySelector(".exchange-select");
+
     try{
 
+        const searchRes = await fetch(
+            `https://finnhub.io/api/v1/search?q=${ticker}&token=${API_KEY}`
+        );
+
+        const searchData = await searchRes.json();
+
+        const results =
+            searchData.result || [];
+
+        if(results.length === 0){
+
+            row.querySelector(".price").innerText =
+                "NOT FOUND";
+
+            return;
+        }
+
+        exchangeSelect.innerHTML =
+            '<option value="">거래소 선택</option>';
+
+        const exchanges = [];
+
+        results.forEach(item=>{
+
+            if(!exchanges.includes(item.exchange)){
+
+                exchanges.push(item.exchange);
+
+                exchangeSelect.innerHTML += `
+                    <option value="${item.exchange}">
+                        ${item.exchange}
+                    </option>
+                `;
+            }
+        });
+
+        let selectedExchange =
+            exchangeSelect.value;
+
+        let stock =
+            results.find(r =>
+                r.exchange === selectedExchange
+            );
+
+        if(!stock){
+            stock = results[0];
+        }
+
+        const symbol = stock.symbol;
+
         const quoteRes = await fetch(
-            `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`
+            `https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${API_KEY}`
         );
 
         const quote = await quoteRes.json();
 
         const profileRes = await fetch(
-            `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`
+            `https://finnhub.io/api/v1/stock/profile2?symbol=${symbol}&token=${API_KEY}`
         );
 
         const profile = await profileRes.json();
 
         const metricRes = await fetch(
-            `https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${API_KEY}`
+            `https://finnhub.io/api/v1/stock/metric?symbol=${symbol}&metric=all&token=${API_KEY}`
         );
 
         const metricData = await metricRes.json();
 
-        const metric = metricData.metric || {};
+        const metric =
+            metricData.metric || {};
 
-        row.querySelector(".exchange").innerText =
-            profile.exchange || "-";
+        exchangeSelect.value =
+            stock.exchange || "";
 
         row.querySelector(".price").innerText =
-            quote.c ? "$" + quote.c.toFixed(2) : "-";
+            quote.c !== undefined
+            ? "$" + quote.c.toFixed(2)
+            : "-";
 
         row.querySelector(".changePercent").innerText =
-            quote.dp ? quote.dp.toFixed(2) + "%" : "-";
+            quote.dp !== undefined
+            ? quote.dp.toFixed(2) + "%"
+            : "-";
 
         row.querySelector(".changeAmount").innerText =
-            quote.d ? quote.d.toFixed(2) : "-";
+            quote.d !== undefined
+            ? quote.d.toFixed(2)
+            : "-";
 
         const yieldValue =
             metric.dividendYieldIndicatedAnnual || 0;
@@ -374,9 +487,11 @@ async function fetchStock(input){
             freq = "Yearly";
         }
 
-        row.querySelector(".freq").innerText = freq;
+        row.querySelector(".freq").innerText =
+            freq;
 
-        row.dataset.dividendYield = yieldValue;
+        row.dataset.dividendYield =
+            yieldValue;
 
         updatePortfolio(row);
 
@@ -384,7 +499,8 @@ async function fetchStock(input){
 
         console.log(err);
 
-        row.querySelector(".exchange").innerText = "API ERROR";
+        row.querySelector(".price").innerText =
+            "API ERROR";
     }
 }
 
@@ -419,7 +535,8 @@ function updatePortfolio(target){
     const profitCell = row.querySelector(".profit");
 
     profitCell.innerText =
-        "$" + profit.toFixed(2);
+        (profit > 0 ? "+$" : "-$") +
+        Math.abs(profit).toFixed(2);
 
     profitCell.className = "portfolio profit";
 
@@ -475,8 +592,17 @@ function updateSummary(){
     document.getElementById("totalEval").innerText =
         "$" + totalEval.toFixed(2);
 
-    document.getElementById("totalProfitRate").innerText =
+    const profitRateEl =
+        document.getElementById("totalProfitRate");
+
+    profitRateEl.innerText =
+        (profitRate > 0 ? "+" : "") +
         profitRate.toFixed(2) + "%";
+
+    profitRateEl.style.color =
+        profitRate >= 0
+        ? "#2563eb"
+        : "#dc2626";
 
     document.getElementById("yearlyDividend").innerText =
         "$" + totalDividend.toFixed(2);
@@ -485,20 +611,20 @@ function updateSummary(){
         "$" + (totalDividend/12).toFixed(2);
 }
 
-function saveData(){
-
-    const saveName = prompt("저장 이름 입력");
-
-    if(!saveName) return;
+function collectRows(){
 
     const rows = [];
 
-    document.querySelectorAll("#stockBody tr").forEach(row=>{
+    document.querySelectorAll("#stockBody tr")
+    .forEach(row=>{
 
         rows.push({
 
             ticker:
                 row.querySelector(".ticker-input").value,
+
+            exchange:
+                row.querySelector(".exchange-select").value,
 
             buyPrice:
                 row.querySelector(".buyPrice").value,
@@ -509,29 +635,81 @@ function saveData(){
 
     });
 
+    return rows;
+}
+
+function saveCurrent(){
+
+    if(!currentSaveName){
+
+        saveAsData();
+        return;
+    }
+
     localStorage.setItem(
-        "portfolio_" + saveName,
-        JSON.stringify(rows)
+        "portfolio_" + currentSaveName,
+        JSON.stringify(collectRows())
     );
 
     alert("저장 완료");
 }
 
-function loadData(){
+function saveAsData(){
 
-    const saveName = prompt("불러올 저장 이름 입력");
+    const saveName =
+        prompt("새 저장 이름 입력");
 
     if(!saveName) return;
 
+    currentSaveName = saveName;
+
+    localStorage.setItem(
+        "portfolio_" + saveName,
+        JSON.stringify(collectRows())
+    );
+
+    alert("다른 이름으로 저장 완료");
+}
+
+function loadData(){
+
+    const keys = Object.keys(localStorage)
+        .filter(k =>
+            k.startsWith("portfolio_")
+        );
+
+    if(keys.length === 0){
+
+        alert("저장된 데이터 없음");
+        return;
+    }
+
+    const list = keys
+        .map(k =>
+            k.replace("portfolio_","")
+        )
+        .join("\n");
+
+    const selected =
+        prompt(
+            "불러올 데이터 선택:\n\n" + list
+        );
+
+    if(!selected) return;
+
     const data = JSON.parse(
-        localStorage.getItem("portfolio_" + saveName)
+        localStorage.getItem(
+            "portfolio_" + selected
+        )
     );
 
     if(!data){
 
-        alert("저장 데이터 없음");
+        alert("해당 저장 없음");
         return;
     }
+
+    currentSaveName = selected;
 
     document.getElementById("stockBody").innerHTML = "";
 
