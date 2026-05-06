@@ -13,6 +13,21 @@ body{
     padding:20px;
 }
 
+h1{
+    margin-bottom:10px;
+}
+
+.source{
+    margin-bottom:20px;
+    color:#666;
+    font-size:14px;
+}
+
+.source a{
+    color:#0077cc;
+    text-decoration:none;
+}
+
 table{
     width:100%;
     border-collapse:collapse;
@@ -53,6 +68,13 @@ button{
 
 <h1>📊 Dividend Tracker</h1>
 
+<div class="source">
+데이터 출처:
+<a href="https://finnhub.io" target="_blank">
+Finnhub API
+</a>
+</div>
+
 <button onclick="addRow()">+ 행 추가</button>
 
 <table>
@@ -60,10 +82,13 @@ button{
 <thead>
 <tr>
     <th>Ticker</th>
+    <th>거래소</th>
     <th>현재가</th>
-    <th>등락률</th>
-    <th>고가</th>
-    <th>저가</th>
+    <th>직전 등락률</th>
+    <th>등락 금액</th>
+    <th>Yield</th>
+    <th>Rate</th>
+    <th>배당주기</th>
 </tr>
 </thead>
 
@@ -79,6 +104,7 @@ button{
 <option value="SCHD">
 <option value="SPYD">
 <option value="QYLD">
+<option value="O">
 <option value="TSLA">
 <option value="NVDA">
 <option value="AAPL">
@@ -102,15 +128,18 @@ function addRow(){
         <td>
             <input
                 list="tickerList"
-                placeholder="Ticker 입력"
+                placeholder="예: JEPQ"
                 onkeydown="handleEnter(event,this)"
             >
         </td>
 
+        <td class="exchange"></td>
         <td class="price"></td>
-        <td class="change"></td>
-        <td class="high"></td>
-        <td class="low"></td>
+        <td class="changePercent"></td>
+        <td class="changeAmount"></td>
+        <td class="yield"></td>
+        <td class="rate"></td>
+        <td class="freq"></td>
 
     `;
 
@@ -134,25 +163,68 @@ async function fetchStock(ticker,row){
 
     try{
 
-        const url =
+        const quoteUrl =
         `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`;
 
-        const res = await fetch(url);
+        const profileUrl =
+        `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`;
 
-        const data = await res.json();
+        const dividendUrl =
+        `https://finnhub.io/api/v1/stock/dividend?symbol=${ticker}&from=2024-01-01&to=2025-12-31&token=${API_KEY}`;
+
+        const quoteRes = await fetch(quoteUrl);
+        const profileRes = await fetch(profileUrl);
+        const dividendRes = await fetch(dividendUrl);
+
+        const quote = await quoteRes.json();
+        const profile = await profileRes.json();
+        const dividends = await dividendRes.json();
+
+        row.querySelector(".exchange").innerText =
+        profile.exchange || "-";
 
         row.querySelector(".price").innerText =
-        data.c || "-";
+        quote.c || "-";
 
-        row.querySelector(".change").innerText =
-        data.dp ? data.dp.toFixed(2) + "%" : "-";
+        row.querySelector(".changePercent").innerText =
+        quote.dp ? quote.dp.toFixed(2) + "%" : "-";
 
-        row.querySelector(".high").innerText =
-        data.h || "-";
+        row.querySelector(".changeAmount").innerText =
+        quote.d ? quote.d.toFixed(2) : "-";
 
-        row.querySelector(".low").innerText =
-        data.l || "-";
+        let yearlyDividend = 0;
 
+        dividends.forEach(d => {
+            yearlyDividend += d.amount;
+        });
+
+        const yieldValue =
+        quote.c
+        ? ((yearlyDividend / quote.c) * 100).toFixed(2)
+        : 0;
+
+        row.querySelector(".yield").innerText =
+        yieldValue + "%";
+
+        row.querySelector(".rate").innerText =
+        yearlyDividend.toFixed(2);
+
+        let freq = "-";
+
+        if(dividends.length >= 10){
+
+            freq = "Monthly";
+        }
+        else if(dividends.length >= 4){
+
+            freq = "Quarterly";
+        }
+        else if(dividends.length >= 1){
+
+            freq = "Year";
+        }
+
+        row.querySelector(".freq").innerText = freq;
     }
 
     catch(e){
@@ -168,5 +240,4 @@ addRow();
 </script>
 
 </body>
-
 </html>
