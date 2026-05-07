@@ -209,6 +209,10 @@ input{
                 📁 불러오기
             </button>
 
+            <button onclick="deleteData()">
+                🗑️ 삭제
+            </button>
+
         </div>
 
     </div>
@@ -795,37 +799,123 @@ function loadData(){
         return;
     }
 
-    const list =
-    keys.map(k =>
-    k.replace("portfolio_",""))
-    .join("\n");
+    const overlay =
+    document.createElement("div");
 
-    const selected =
-    prompt(
-    "불러올 이름\n\n"+list);
+    overlay.style = `
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.35);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+    `;
 
-    if(!selected) return;
+    const modal =
+    document.createElement("div");
 
-    const data =
-    JSON.parse(
-    localStorage.getItem(
-    "portfolio_"+selected));
+    modal.style = `
+    background:white;
+    width:340px;
+    border-radius:20px;
+    padding:24px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+    `;
 
-    if(!data){
+    modal.innerHTML = `
 
-        alert("데이터 없음");
-        return;
-    }
+    <h3 style="
+    margin-top:0;
+    margin-bottom:18px;
+    color:#2563eb;
+    ">
+    저장 목록
+    </h3>
 
-    currentSaveName =
-    selected;
+    <div id="saveList"></div>
 
-    document.getElementById(
-    "stockBody").innerHTML = "";
+    <div style="
+    margin-top:20px;
+    text-align:right;
+    ">
 
-    data.forEach(item=>{
-        addRow(item);
+        <button id="closeModal">
+        닫기
+        </button>
+
+    </div>
+    `;
+
+    overlay.appendChild(modal);
+
+    document.body.appendChild(overlay);
+
+    const saveList =
+    modal.querySelector("#saveList");
+
+    keys.forEach(key=>{
+
+        const saveName =
+        key.replace("portfolio_","");
+
+        const item =
+        document.createElement("div");
+
+        item.innerText =
+        saveName;
+
+        item.style = `
+        padding:12px;
+        border:1px solid #dbe2f0;
+        border-radius:12px;
+        margin-bottom:10px;
+        cursor:pointer;
+        font-size:14px;
+        transition:0.2s;
+        `;
+
+        item.onmouseenter = ()=>{
+            item.style.background="#eff6ff";
+        };
+
+        item.onmouseleave = ()=>{
+            item.style.background="white";
+        };
+
+        item.onclick = ()=>{
+
+            const data =
+            JSON.parse(
+            localStorage.getItem(key));
+
+            currentSaveName =
+            saveName;
+
+            document.getElementById(
+            "stockBody").innerHTML = "";
+
+            data.forEach(item=>{
+                addRow(item);
+            });
+
+            document.body
+            .removeChild(overlay);
+        };
+
+        saveList.appendChild(item);
     });
+
+modal.querySelector("#closeModal")
+.onclick = ()=>{
+
+    document.body
+    .removeChild(overlay);
+};
+
+overlay.appendChild(modal);
+
+document.body.appendChild(overlay);
 }
 
 function sortTable(columnIndex){
@@ -862,7 +952,132 @@ function sortTable(columnIndex){
         tbody.appendChild(row);
     });
 }
+    
+function deleteData(){
 
+    const keys =
+    Object.keys(localStorage)
+    .filter(k =>
+    k.startsWith("portfolio_"));
+
+    if(keys.length === 0){
+
+        alert("삭제할 데이터 없음");
+        return;
+    }
+
+    const overlay =
+    document.createElement("div");
+
+    overlay.style.position = "fixed";
+    overlay.style.inset = "0";
+    overlay.style.background =
+    "rgba(0,0,0,0.35)";
+    overlay.style.display = "flex";
+    overlay.style.justifyContent =
+    "center";
+    overlay.style.alignItems =
+    "center";
+    overlay.style.zIndex = "9999";
+
+    const modal =
+    document.createElement("div");
+
+    modal.style.width = "360px";
+    modal.style.background = "white";
+    modal.style.borderRadius = "20px";
+    modal.style.padding = "24px";
+    modal.style.boxShadow =
+    "0 10px 30px rgba(0,0,0,0.2)";
+
+    const title =
+    document.createElement("h3");
+
+    title.innerText = "삭제할 저장 선택";
+
+    title.style.marginTop = "0";
+    title.style.marginBottom = "18px";
+    title.style.color = "#ef4444";
+
+    modal.appendChild(title);
+
+    keys.forEach(key=>{
+
+        const saveName =
+        key.replace("portfolio_","");
+
+        const item =
+        document.createElement("div");
+
+        item.innerText = saveName;
+
+        item.style.padding = "12px";
+        item.style.border =
+        "1px solid #dbe2f0";
+        item.style.borderRadius = "12px";
+        item.style.marginBottom = "10px";
+        item.style.cursor = "pointer";
+        item.style.fontSize = "14px";
+
+        item.onmouseenter = ()=>{
+
+            item.style.background =
+            "#fee2e2";
+        };
+
+        item.onmouseleave = ()=>{
+
+            item.style.background =
+            "white";
+        };
+
+        item.onclick = ()=>{
+
+            const confirmDelete =
+            confirm(
+            `"${saveName}" 삭제할까?`);
+
+            if(!confirmDelete) return;
+
+            localStorage.removeItem(key);
+
+            item.remove();
+
+            const remain =
+            Object.keys(localStorage)
+            .filter(k =>
+            k.startsWith("portfolio_"));
+
+            if(remain.length === 0){
+
+                document.body
+                .removeChild(overlay);
+            }
+        };
+
+        modal.appendChild(item);
+    });
+
+    const closeBtn =
+    document.createElement("button");
+
+    closeBtn.innerText = "닫기";
+
+    closeBtn.style.marginTop = "10px";
+
+    closeBtn.onclick = ()=>{
+
+        document.body
+        .removeChild(overlay);
+    };
+
+    modal.appendChild(closeBtn);
+
+    overlay.appendChild(modal);
+
+    document.body.appendChild(overlay);
+}
+    
 addRow({ticker:"NVDA"});
 
 </script>
