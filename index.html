@@ -10,6 +10,11 @@
 
 <style>
 
+.down{
+    color:#ef4444 !important;
+    font-weight:600;
+}
+
 body{
     margin:0;
     padding:16px;
@@ -405,13 +410,31 @@ async function fetchStock(input){
         .innerText =
         "$" + (quote.c || 0).toFixed(2);
 
-        row.querySelector(".changePercent")
-        .innerText =
-        (quote.dp || 0).toFixed(2) + "%";
+       const changePercentEl =
+row.querySelector(".changePercent");
 
-        row.querySelector(".changeAmount")
-        .innerText =
-        (quote.d || 0).toFixed(2);
+const changeAmountEl =
+row.querySelector(".changeAmount");
+
+const dp = quote.dp || 0;
+const d = quote.d || 0;
+
+changePercentEl.innerText =
+dp.toFixed(2) + "%";
+
+changeAmountEl.innerText =
+d.toFixed(2);
+
+if(dp < 0){
+
+    changePercentEl.classList.add("down");
+    changeAmountEl.classList.add("down");
+
+}else{
+
+    changePercentEl.classList.remove("down");
+    changeAmountEl.classList.remove("down");
+}
 
         const yieldValue =
         metric.dividendYieldIndicatedAnnual || 0;
