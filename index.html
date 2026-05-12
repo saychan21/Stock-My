@@ -354,8 +354,11 @@ class="rowCheck">
     tbody.appendChild(row);
 
     if(data.ticker){
-        fetchStock(
-        row.querySelector("input"));
+	
+fetchStock(
+row.querySelector(
+'input[list="tickerList"]'
+));
     }
 }
 
