@@ -717,7 +717,7 @@ function loadData(){
 
     modal.style = `
     background:white;
-    width:340px;
+    width:360px;
     border-radius:20px;
     padding:24px;
     box-shadow:0 10px 30px rgba(0,0,0,0.2);
@@ -759,6 +759,22 @@ function loadData(){
         const saveName =
         key.replace("portfolio_","");
 
+        const itemWrap =
+        document.createElement("div");
+
+        itemWrap.style = `
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        padding:12px;
+        border:1px solid #dbe2f0;
+        border-radius:12px;
+        margin-bottom:10px;
+        background:white;
+        transition:0.2s;
+        `;
+
         const item =
         document.createElement("div");
 
@@ -766,22 +782,10 @@ function loadData(){
         saveName;
 
         item.style = `
-        padding:12px;
-        border:1px solid #dbe2f0;
-        border-radius:12px;
-        margin-bottom:10px;
+        flex:1;
         cursor:pointer;
         font-size:14px;
-        transition:0.2s;
         `;
-
-        item.onmouseenter = ()=>{
-            item.style.background="#eff6ff";
-        };
-
-        item.onmouseleave = ()=>{
-            item.style.background="white";
-        };
 
         item.onclick = ()=>{
 
@@ -803,7 +807,39 @@ function loadData(){
             .removeChild(overlay);
         };
 
-        saveList.appendChild(item);
+        const deleteBtn =
+        document.createElement("button");
+
+        deleteBtn.innerText =
+        "삭제";
+
+        deleteBtn.style = `
+        background:#ef4444;
+        padding:8px 12px;
+        border-radius:10px;
+        font-size:12px;
+        `;
+
+        deleteBtn.onclick = (e)=>{
+
+            e.stopPropagation();
+
+            const ok =
+            confirm(
+            "'" + saveName + "' 삭제할까?"
+            );
+
+            if(!ok) return;
+
+            localStorage.removeItem(key);
+
+            itemWrap.remove();
+        };
+
+        itemWrap.appendChild(item);
+        itemWrap.appendChild(deleteBtn);
+
+        saveList.appendChild(itemWrap);
     });
 
     modal.querySelector("#closeModal")
