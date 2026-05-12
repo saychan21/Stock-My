@@ -463,7 +463,7 @@ ticker
 
         row.querySelector(".changeAmount")
         .innerText =
-        (quote.d || 0).toFixed(2);
+        "$" + (quote.d || 0).toFixed(2);
 
         const yieldValue =
         metric.dividendYieldIndicatedAnnual || 0;
