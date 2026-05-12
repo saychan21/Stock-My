@@ -210,7 +210,7 @@ input{
 
     <div class="source">
         데이터 출처:
-        <a href="https://finnhub.io"
+        <a href="https://finance.yahoo.com"
         target="_blank">
         Yahoo Finance
         </a>
@@ -291,9 +291,6 @@ input{
 
 <script>
 
-const API_KEY =
-"d7tfr7pr01qugn0afce0d7tfr7pr01qugn0afceg";
-
 let currentSaveName = null;
 
 function addRow(data = {}){
@@ -369,71 +366,72 @@ async function fetchStock(input){
 
     try{
 
-const res =
-await fetch(
-"https://api.allorigins.win/raw?url=" +
-encodeURIComponent(
-"https://query1.finance.yahoo.com/v10/finance/quoteSummary/" +
-ticker +
-"?modules=price,summaryDetail"
-)
-);
+        const res =
+        await fetch(
+        "https://query1.finance.yahoo.com/v10/finance/quoteSummary/" +
+        ticker +
+        "?modules=price,summaryDetail",
+        {
+            headers:{
+                "User-Agent":"Mozilla/5.0"
+            }
+        });
 
-const data =
-await res.json();
+        const data =
+        await res.json();
 
-if(
-!data.quoteSummary ||
-!data.quoteSummary.result ||
-!data.quoteSummary.result[0]
-){
-    throw new Error("Yahoo Data Error");
-}
+        if(
+        !data.quoteSummary ||
+        !data.quoteSummary.result ||
+        !data.quoteSummary.result[0]
+        ){
+            throw new Error("Yahoo Data Error");
+        }
 
-const result =
-data.quoteSummary.result[0];
+        const result =
+        data.quoteSummary.result[0];
 
-const quote = {
+        const quote = {
 
-    c:
-    result.price.regularMarketPrice.raw,
+            c:
+            result.price.regularMarketPrice.raw,
 
-    dp:
-    (
-        (
+            dp:
+            (
+                (
+                    result.price.regularMarketPrice.raw -
+                    result.summaryDetail.previousClose.raw
+                )
+                /
+                result.summaryDetail.previousClose.raw
+            ) * 100,
+
+            d:
             result.price.regularMarketPrice.raw -
             result.summaryDetail.previousClose.raw
-        )
-        /
-        result.summaryDetail.previousClose.raw
-    ) * 100,
+        };
 
-    d:
-    result.price.regularMarketPrice.raw -
-    result.summaryDetail.previousClose.raw
-};
+        const profile = {
 
-const profile = {
+            name:
+            result.price.longName,
 
-    name:
-    result.price.longName,
+            exchange:
+            result.price.exchangeName
+        };
 
-    exchange:
-    result.price.exchangeName
-};
+        const metric = {
 
-const metric = {
+            dividendYieldIndicatedAnnual:
+            result.summaryDetail.dividendYield
+            ? result.summaryDetail.dividendYield.raw * 100
+            : 0,
 
-    dividendYieldIndicatedAnnual:
-    result.summaryDetail.dividendYield
-    ? result.summaryDetail.dividendYield.raw * 100
-    : 0,
-
-    dividendPerShareAnnual:
-    result.summaryDetail.dividendRate
-    ? result.summaryDetail.dividendRate.raw
-    : 0
-};
+            dividendPerShareAnnual:
+            result.summaryDetail.dividendRate
+            ? result.summaryDetail.dividendRate.raw
+            : 0
+        };
 
         row.querySelector(".stockName")
         .innerText =
