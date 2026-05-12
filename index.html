@@ -450,69 +450,77 @@ async function fetchStock(input){
 
     try{
 
-	const res =
-	await fetch(
-	"https://query1.finance.yahoo.com/v7/finance/quote?symbols=" +
-	ticker
-	);
-	  
-	  
+const res =
+await fetch(
+"https://corsproxy.io/?" +
+encodeURIComponent(
+"https://query1.finance.yahoo.com/v7/finance/quote?symbols=" +
+ticker
+)
+);	  
 	  
         const data =
         await res.json();
 
-        if(
-        !data.quoteSummary ||
-        !data.quoteSummary.result ||
-        !data.quoteSummary.result[0]
-        ){
-            throw new Error("Yahoo Data Error");
-        }
+if(
+!data.quoteResponse ||
+!data.quoteResponse.result ||
+!data.quoteResponse.result[0]
+){
+    throw new Error("Yahoo Data Error");
+}
 
-        const result =
-        data.quoteSummary.result[0];
+const result =
+data.quoteResponse.result[0];
 
-        const quote = {
+const currentPrice =
+result.regularMarketPrice || 0;
 
-            c:
-            result.price.regularMarketPrice.raw,
+const previousClose =
+result.regularMarketPreviousClose || 0;
 
-            dp:
-            (
-                (
-                    result.price.regularMarketPrice.raw -
-                    result.summaryDetail.previousClose.raw
-                )
-                /
-                result.summaryDetail.previousClose.raw
-            ) * 100,
+const quote = {
 
-            d:
-            result.price.regularMarketPrice.raw -
-            result.summaryDetail.previousClose.raw
-        };
+    c: currentPrice,
 
-        const profile = {
+    dp:
+    previousClose
+    ? (
+        (
+            currentPrice -
+            previousClose
+        )
+        /
+        previousClose
+    ) * 100
+    : 0,
 
-            name:
-            result.price.longName,
+    d:
+    currentPrice -
+    previousClose
+};
 
-            exchange:
-            result.price.exchangeName
-        };
+const profile = {
 
-        const metric = {
+    name:
+    result.longName || ticker,
 
-            dividendYieldIndicatedAnnual:
-            result.summaryDetail.dividendYield
-            ? result.summaryDetail.dividendYield.raw * 100
-            : 0,
+    exchange:
+    result.fullExchangeName || "-"
+};
 
-            dividendPerShareAnnual:
-            result.summaryDetail.dividendRate
-            ? result.summaryDetail.dividendRate.raw
-            : 0
-        };
+const metric = {
+
+    dividendYieldIndicatedAnnual:
+    result.trailingAnnualDividendYield
+    ? result.trailingAnnualDividendYield * 100
+    : 0,
+
+    dividendPerShareAnnual:
+    result.trailingAnnualDividendRate || 0
+};
+
+
 
         row.querySelector(".stockName")
         .innerText =
