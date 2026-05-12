@@ -187,6 +187,10 @@ input{
         </div>
 
         <div style="margin-top:14px;">
+		
+		<button onclick="deleteSelectedRows()" style="background:#ef4444;">
+🗑 선택 삭제
+</button>
 
             <button onclick="addRow()">
                 + 행 추가
@@ -223,6 +227,10 @@ input{
 <thead>
 
 <tr>
+<th style="width:40px;">
+<input type="checkbox"
+onclick="toggleAllRows(this)">
+</th>
     <th onclick="sortTable(0)">Ticker</th>
     <th onclick="sortTable(1)">주식 정보</th>
     <th onclick="sortTable(2)">거래소</th>
@@ -302,6 +310,10 @@ function addRow(data = {}){
     document.createElement("tr");
 
     row.innerHTML = `
+	<td>
+<input type="checkbox"
+class="rowCheck">
+</td>
 
     <td>
         <input
@@ -890,6 +902,46 @@ addRow({ticker:"JEPQ"});
 addRow({ticker:"SCHD"});
 addRow({ticker:"NVDA"});
 addRow({ticker:"GOOGL"});
+
+function toggleAllRows(headerCheckbox){
+
+    document
+    .querySelectorAll(".rowCheck")
+    .forEach(chk=>{
+
+        chk.checked =
+        headerCheckbox.checked;
+    });
+}
+
+function deleteSelectedRows(){
+
+    const checkedRows =
+    document.querySelectorAll(
+    ".rowCheck:checked"
+    );
+
+    if(checkedRows.length===0){
+
+        alert("선택된 행 없음");
+        return;
+    }
+
+    const ok =
+    confirm(
+    checkedRows.length +
+    "개 행 삭제할까?"
+    );
+
+    if(!ok) return;
+
+    checkedRows.forEach(chk=>{
+
+        chk.closest("tr").remove();
+    });
+
+    updateSummary();
+}
 
 </script>
 
