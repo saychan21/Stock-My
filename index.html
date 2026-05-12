@@ -896,25 +896,47 @@ function sortTable(columnIndex){
     const rows =
     Array.from(tbody.querySelectorAll("tr"));
 
-    rows.sort((a,b)=>{
+rows.sort((a,b)=>{
 
-        let aText =
-        a.children[columnIndex]
-        .innerText.replace(/[$,%+]/g,'');
+    let aCell =
+    a.children[columnIndex];
 
-        let bText =
-        b.children[columnIndex]
-        .innerText.replace(/[$,%+]/g,'');
+    let bCell =
+    b.children[columnIndex];
 
-        let aNum = parseFloat(aText);
-        let bNum = parseFloat(bText);
+    let aInput =
+    aCell.querySelector("input");
 
-        if(!isNaN(aNum) && !isNaN(bNum)){
-            return bNum - aNum;
-        }
+    let bInput =
+    bCell.querySelector("input");
 
-        return aText.localeCompare(bText);
-    });
+    let aText =
+    aInput
+    ? aInput.value
+    : aCell.innerText;
+
+    let bText =
+    bInput
+    ? bInput.value
+    : bCell.innerText;
+
+    aText =
+    aText.replace(/[$,%+]/g,'');
+
+    bText =
+    bText.replace(/[$,%+]/g,'');
+
+    let aNum = parseFloat(aText);
+    let bNum = parseFloat(bText);
+
+    if(!isNaN(aNum) && !isNaN(bNum)){
+        return bNum - aNum;
+    }
+
+    return aText.localeCompare(bText);
+});
+
+
 
     tbody.innerHTML = "";
 
