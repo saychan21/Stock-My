@@ -281,7 +281,7 @@ onclick="toggleAllRows(this)">
 
     <div class="card">
         <div class="card-title">
-            예상 월배당(세전)
+            예상 월배당(세후)
         </div>
         <div class="card-value"
         id="monthlyDividend">$0.00</div>
@@ -289,7 +289,7 @@ onclick="toggleAllRows(this)">
 
     <div class="card">
         <div class="card-title">
-            예상 연배당(세전)
+            예상 연배당(세후)
         </div>
         <div class="card-value"
         id="yearlyDividend">$0.00</div>
@@ -636,14 +636,22 @@ function updateSummary(){
         "card-value total-profit-plus";
     }
 
-    document.getElementById(
-    "yearlyDividend").innerText =
-    "$" + totalDividend.toFixed(2);
+    
+	
+	const afterTaxDividend =
+totalDividend * 0.85;
 
-    document.getElementById(
-    "monthlyDividend").innerText =
-    "$" +
-    (totalDividend/12).toFixed(2);
+document.getElementById(
+"yearlyDividend").innerText =
+"$" +
+afterTaxDividend.toFixed(2);
+
+document.getElementById(
+"monthlyDividend").innerText =
+"$" +
+(afterTaxDividend/12).toFixed(2);
+
+
 }
 
 function collectRows(){
