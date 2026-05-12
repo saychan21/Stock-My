@@ -366,17 +366,11 @@ async function fetchStock(input){
 
     try{
 
-        const res =
-        await fetch(
-        "https://query1.finance.yahoo.com/v10/finance/quoteSummary/" +
-        ticker +
-        "?modules=price,summaryDetail",
-        {
-            headers:{
-                "User-Agent":"Mozilla/5.0"
-            }
-        });
-
+       const res =
+await fetch(
+"https://stock-yahoo-api.saychan21.workers.dev?ticker=" +
+ticker
+);
         const data =
         await res.json();
 
