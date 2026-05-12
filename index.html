@@ -685,6 +685,7 @@ function saveAsData(){
     alert("다른 이름 저장 완료");
 }
 
+
 function loadData(){
 
     const keys =
@@ -698,37 +699,124 @@ function loadData(){
         return;
     }
 
-    const list =
-    keys.map(k =>
-    k.replace("portfolio_",""))
-    .join("\n");
+    const overlay =
+    document.createElement("div");
 
-    const selected =
-    prompt(
-    "불러올 이름\n\n"+list);
+    overlay.style = `
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.35);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    z-index:9999;
+    `;
 
-    if(!selected) return;
+    const modal =
+    document.createElement("div");
 
-    const data =
-    JSON.parse(
-    localStorage.getItem(
-    "portfolio_"+selected));
+    modal.style = `
+    background:white;
+    width:340px;
+    border-radius:20px;
+    padding:24px;
+    box-shadow:0 10px 30px rgba(0,0,0,0.2);
+    `;
 
-    if(!data){
+    modal.innerHTML = `
 
-        alert("데이터 없음");
-        return;
-    }
+    <h3 style="
+    margin-top:0;
+    margin-bottom:18px;
+    color:#2563eb;
+    ">
+    저장 목록
+    </h3>
 
-    currentSaveName =
-    selected;
+    <div id="saveList"></div>
 
-    document.getElementById(
-    "stockBody").innerHTML = "";
+    <div style="
+    margin-top:20px;
+    text-align:right;
+    ">
 
-    data.forEach(item=>{
-        addRow(item);
+        <button id="closeModal">
+        닫기
+        </button>
+
+    </div>
+    `;
+
+    overlay.appendChild(modal);
+
+    document.body.appendChild(overlay);
+
+    const saveList =
+    modal.querySelector("#saveList");
+
+    keys.forEach(key=>{
+
+        const saveName =
+        key.replace("portfolio_","");
+
+        const item =
+        document.createElement("div");
+
+        item.innerText =
+        saveName;
+
+        item.style = `
+        padding:12px;
+        border:1px solid #dbe2f0;
+        border-radius:12px;
+        margin-bottom:10px;
+        cursor:pointer;
+        font-size:14px;
+        transition:0.2s;
+        `;
+
+        item.onmouseenter = ()=>{
+            item.style.background="#eff6ff";
+        };
+
+        item.onmouseleave = ()=>{
+            item.style.background="white";
+        };
+
+        item.onclick = ()=>{
+
+            const data =
+            JSON.parse(
+            localStorage.getItem(key));
+
+            currentSaveName =
+            saveName;
+
+            document.getElementById(
+            "stockBody").innerHTML = "";
+
+            data.forEach(item=>{
+                addRow(item);
+            });
+
+            document.body
+            .removeChild(overlay);
+        };
+
+        saveList.appendChild(item);
     });
+
+    modal.querySelector("#closeModal")
+    .onclick = ()=>{
+
+        document.body
+        .removeChild(overlay);
+    };
+}
+
+
+
+    
 }
 
 function sortTable(columnIndex){
