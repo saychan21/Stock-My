@@ -1,4 +1,4 @@
-<script>
+
 
 <!DOCTYPE html>
 <html lang="ko">
@@ -11,14 +11,6 @@ content="width=device-width, initial-scale=1.0">
 
 <title>Dividend Tracker</title>
 
-
-
-<head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Dividend Tracker</title>
 
 <style>
 
@@ -311,7 +303,6 @@ onclick="toggleAllRows(this)">
 
 <script>
 
-<script>
 
 const GITHUB_USER = "saychan21";
 const GITHUB_REPO = "Stock-My";
@@ -459,11 +450,14 @@ async function fetchStock(input){
 
     try{
 
-       const res =
-await fetch(
-"https://stock-yahoo-api.saychan21.workers.dev?ticker=" +
-ticker
-);
+	const res =
+	await fetch(
+	"https://query1.finance.yahoo.com/v7/finance/quote?symbols=" +
+	ticker
+	);
+	  
+	  
+	  
         const data =
         await res.json();
 
