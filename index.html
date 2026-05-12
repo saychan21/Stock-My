@@ -375,11 +375,7 @@ async function fetchStock(input){
 
     try{
 
-        const res =
-        await fetch(
-        "https://corsproxy.io/?https://query1.finance.yahoo.com/v10/finance/quoteSummary/" +
-        ticker +
-        "?modules=price,summaryDetail");
+      const res = await fetch( "https://api.allorigins.win/raw?url=" + encodeURIComponent( "https://query1.finance.yahoo.com/v10/finance/quoteSummary/" + ticker + "?modules=price,summaryDetail" ) );
 
         const data =
         await res.json();
