@@ -1,3 +1,65 @@
+async function saveToGitHub(){
+
+    const data =
+    JSON.stringify(
+    collectRows(),
+    null,
+    2
+    );
+
+    const apiUrl =
+    `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`;
+
+    let sha = "";
+
+    try{
+
+        const current =
+        await fetch(apiUrl,{
+            headers:{
+                Authorization:
+                `token ${GITHUB_TOKEN}`
+            }
+        });
+
+        const currentData =
+        await current.json();
+
+        sha = currentData.sha || "";
+
+    }catch(e){}
+
+    await fetch(apiUrl,{
+        method:"PUT",
+        headers:{
+            Authorization:
+            `token ${GITHUB_TOKEN}`,
+            "Content-Type":
+            "application/json"
+        },
+        body:JSON.stringify({
+            message:"update portfolio",
+            content:btoa(
+                unescape(
+                    encodeURIComponent(data)
+                )
+            ),
+            sha:sha
+        })
+    });
+
+    console.log(
+    "GitHub 저장 완료"
+    );
+}
+
+const GITHUB_USER = "saychan21";
+const GITHUB_REPO = "Stock-My";
+const GITHUB_FILE = "portfolio.json";
+
+const GITHUB_TOKEN =
+"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";
+
 <!DOCTYPE html>
 <html lang="ko">
 
@@ -683,18 +745,11 @@ row.querySelector(
     return rows;
 }
 
-function saveCurrent(){
+async function saveCurrent(){
 
-    if(!currentSaveName){
-        saveAsData();
-        return;
-    }
+    await saveToGitHub();
 
-    localStorage.setItem(
-    "portfolio_" + currentSaveName,
-    JSON.stringify(collectRows()));
-
-    alert("저장 완료");
+    alert("GitHub 저장 완료");
 }
 
 function saveAsData(){
