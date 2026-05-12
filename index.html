@@ -651,9 +651,10 @@ function collectRows(){
 
         rows.push({
 
-            ticker:
-            row.querySelector("input")
-            .value,
+ticker:
+row.querySelector(
+'input[list="tickerList"]'
+).value,
 
             buyPrice:
             row.querySelector(".buyPrice")
