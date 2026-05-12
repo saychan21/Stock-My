@@ -918,10 +918,51 @@ function sortTable(columnIndex){
     });
 }
 
-addRow({ticker:"JEPQ"});
-addRow({ticker:"SCHD"});
-addRow({ticker:"NVDA"});
-addRow({ticker:"GOOGL"});
+/************************************************
+ * 마지막 자동 로드
+ ************************************************/
+window.onload = ()=>{
+
+    const autoData =
+    localStorage.getItem(
+    "portfolio_autosave"
+    );
+
+    if(autoData){
+
+        const data =
+        JSON.parse(autoData);
+
+        data.forEach(item=>{
+
+            addRow(item);
+
+        });
+
+    }else{
+
+        addRow();
+
+    }
+
+};
+
+
+/************************************************
+ * 자동 저장
+ ************************************************/
+function autoSave(){
+
+    localStorage.setItem(
+    "portfolio_autosave",
+    JSON.stringify(
+        collectRows()
+    )
+    );
+
+}
+
+
 
 function toggleAllRows(headerCheckbox){
 
