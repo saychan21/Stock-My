@@ -1,371 +1,3 @@
-<!DOCTYPE html>
-<html lang="ko">
-
-<head>
-
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>Dividend Tracker</title>
-
-<style>
-
-.down{
-    color:#ef4444 !important;
-    font-weight:600;
-}
-
-body{
-    margin:0;
-    padding:16px;
-    background:#e9eef7;
-    font-family:
-    "Pretendard",
-    "Segoe UI",
-    sans-serif;
-}
-
-.topbar{
-    display:flex;
-    justify-content:space-between;
-    align-items:flex-start;
-    margin-bottom:16px;
-}
-
-.title{
-    display:flex;
-    align-items:center;
-    gap:10px;
-}
-
-.title h1{
-    margin:0;
-    font-size:24px;
-    color:#2563eb;
-}
-
-.source{
-    color:#666;
-    font-size:12px;
-}
-
-button{
-    border:none;
-    background:#2563eb;
-    color:white;
-    border-radius:10px;
-    padding:10px 16px;
-    font-size:13px;
-    font-weight:600;
-    cursor:pointer;
-    margin-right:8px;
-}
-
-button:hover{
-    background:#1d4ed8;
-}
-
-table{
-    width:100%;
-    border-collapse:collapse;
-    overflow:hidden;
-    border-radius:20px;
-    background:white;
-    box-shadow:
-    0 4px 14px rgba(0,0,0,0.08);
-}
-
-th{
-    background:#2563eb;
-    color:white;
-    padding:10px;
-    font-size:12px;
-    cursor:pointer;
-    user-select:none;
-}
-
-th:hover{
-    background:#1d4ed8;
-}
-
-td{
-    padding:6px;
-    border-bottom:
-    1px solid #e5e7eb;
-    text-align:center;
-    font-size:12px;
-}
-
-input{
-    width:90px;
-    padding:7px;
-    border-radius:10px;
-    border:
-    1px solid #cbd5e1;
-    text-align:center;
-    font-size:12px;
-}
-
-.stockName{
-    font-size:11px;
-    color:#475569;
-    max-width:220px;
-}
-
-.summary{
-    margin-top:20px;
-    display:grid;
-    grid-template-columns:
-    repeat(5,1fr);
-    gap:14px;
-}
-
-.card{
-    background:white;
-    border-radius:20px;
-    padding:18px;
-    border:1px solid #dbe2f0;
-    box-shadow:
-    0 4px 12px rgba(0,0,0,0.08);
-}
-
-.card-title{
-    font-size:12px;
-    color:#64748b;
-    margin-bottom:10px;
-}
-
-.card-value{
-    font-size:20px;
-    font-weight:bold;
-    color:#111827;
-}
-
-.profit-plus{
-    color:#2563eb;
-    font-weight:bold;
-}
-
-.profit-minus{
-    color:#ef4444;
-    font-weight:bold;
-}
-
-.total-profit-minus{
-    color:#ef4444 !important;
-}
-
-.total-profit-plus{
-    color:#111827;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<datalist id="tickerList">
-
-<option value="JEPQ">
-<option value="SCHD">
-<option value="NVDA">
-<option value="GOOGL">
-<option value="AAPL">
-<option value="MSFT">
-<option value="TSLA">
-<option value="AMZN">
-<option value="META">
-<option value="QQQ">
-<option value="SPY">
-<option value="VOO">
-
-</datalist>
-
-<div class="topbar">
-
-    <div>
-
-        <div class="title">
-            <span style="font-size:30px;">📊</span>
-            <h1>Dividend Tracker</h1>
-        </div>
-
-        <div style="margin-top:14px;">
-
-            <button onclick="addRow()">
-                + 행 추가
-            </button>
-
-            <button onclick="saveCurrent()">
-                💾 저장
-            </button>
-
-            <button onclick="saveAsData()">
-                📂 다른 이름 저장
-            </button>
-
-            <button onclick="loadData()">
-                📁 불러오기
-            </button>
-
-            <button onclick="deleteData()">
-                🗑️ 삭제
-            </button>
-
-        </div>
-
-    </div>
-
-    <div class="source">
-        데이터 출처:
-        <a href="https://finnhub.io"
-        target="_blank">
-        Finnhub API
-        </a>
-    </div>
-
-</div>
-
-<table id="stockTable">
-
-<thead>
-
-<tr>
-    <th onclick="sortTable(0)">Ticker</th>
-    <th onclick="sortTable(1)">주식 정보</th>
-    <th onclick="sortTable(2)">거래소</th>
-    <th onclick="sortTable(3)">현재가</th>
-    <th onclick="sortTable(4)">직전 등락률</th>
-    <th onclick="sortTable(5)">등락 금액</th>
-    <th onclick="sortTable(6)">Yield</th>
-    <th onclick="sortTable(7)">Rate</th>
-    <th onclick="sortTable(8)">배당주기</th>
-    <th onclick="sortTable(9)">구매가</th>
-    <th onclick="sortTable(10)">수량</th>
-    <th onclick="sortTable(11)">매수금액</th>
-    <th onclick="sortTable(12)">평가금액</th>
-    <th onclick="sortTable(13)">손익</th>
-</tr>
-
-</thead>
-
-<tbody id="stockBody"></tbody>
-
-</table>
-
-<div class="summary">
-
-    <div class="card">
-        <div class="card-title">
-            총 구매금액
-        </div>
-        <div class="card-value"
-        id="totalBuy">$0.00</div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">
-            총 평가금액
-        </div>
-        <div class="card-value"
-        id="totalEval">$0.00</div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">
-            총 수익률
-        </div>
-        <div class="card-value total-profit-plus"
-        id="totalProfitRate">0.00%</div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">
-            예상 월배당
-        </div>
-        <div class="card-value"
-        id="monthlyDividend">$0.00</div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">
-            예상 연배당
-        </div>
-        <div class="card-value"
-        id="yearlyDividend">$0.00</div>
-    </div>
-
-</div>
-
-<script>
-
-const API_KEY =
-"d7tfr7pr01qugn0afce0d7tfr7pr01qugn0afceg";
-
-let currentSaveName = null;
-
-function addRow(data = {}){
-
-    const tbody =
-    document.getElementById("stockBody");
-
-    const row =
-    document.createElement("tr");
-
-    row.innerHTML = `
-
-    <td>
-        <input
-        list="tickerList"
-        value="${data.ticker || ''}"
-        onblur="fetchStock(this)"
-        onkeydown="handleEnter(event,this)">
-    </td>
-
-    <td class="stockName">-</td>
-    <td class="exchange">-</td>
-    <td class="price">$0.00</td>
-    <td class="changePercent">0.00%</td>
-    <td class="changeAmount">0.00</td>
-    <td class="yield">0.00%</td>
-    <td class="rate">0.00</td>
-    <td class="freq">-</td>
-
-    <td>
-        <input class="buyPrice"
-        type="number"
-        value="${data.buyPrice || ''}"
-        oninput="updatePortfolio(this)">
-    </td>
-
-    <td>
-        <input class="quantity"
-        type="number"
-        value="${data.quantity || ''}"
-        oninput="updatePortfolio(this)">
-    </td>
-
-    <td class="buyTotal">$0.00</td>
-    <td class="evalTotal">$0.00</td>
-    <td class="profit profit-plus">+$0.00</td>
-    `;
-
-    tbody.appendChild(row);
-
-    if(data.ticker){
-        fetchStock(
-        row.querySelector("input"));
-    }
-}
-
-function handleEnter(event,input){
-
-    if(event.key==="Enter"){
-        fetchStock(input);
-    }
-}
-
 async function fetchStock(input){
 
     const ticker =
@@ -378,41 +10,48 @@ async function fetchStock(input){
 
     try{
 
-        const quoteRes =
+        const res =
         await fetch(
-        `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`);
+        `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${ticker}?modules=price,summaryDetail`
+        );
 
-        const profileRes =
-        await fetch(
-        `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`);
+        const data =
+        await res.json();
 
-        const metricRes =
-        await fetch(
-        `https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${API_KEY}`);
+        const result =
+        data.quoteSummary.result[0];
 
-        const quote =
-        await quoteRes.json();
+        const priceData =
+        result.price || {};
 
-        const profile =
-        await profileRes.json();
+        const detail =
+        result.summaryDetail || {};
 
-        const metricData =
-        await metricRes.json();
+        const currentPrice =
+        priceData.regularMarketPrice?.raw || 0;
 
-        const metric =
-        metricData.metric || {};
+        const prevClose =
+        detail.previousClose?.raw || 0;
+
+        const changeAmount =
+        currentPrice - prevClose;
+
+        const changePercent =
+        prevClose
+        ? (changeAmount / prevClose) * 100
+        : 0;
 
         row.querySelector(".stockName")
         .innerText =
-        profile.name || "-";
+        priceData.longName || "-";
 
         row.querySelector(".exchange")
         .innerText =
-        profile.exchange || "-";
+        priceData.exchangeName || "-";
 
         row.querySelector(".price")
         .innerText =
-        "$" + (quote.c || 0).toFixed(2);
+        "$" + currentPrice.toFixed(2);
 
         const changePercentEl =
         row.querySelector(".changePercent");
@@ -420,16 +59,13 @@ async function fetchStock(input){
         const changeAmountEl =
         row.querySelector(".changeAmount");
 
-        const dp = quote.dp || 0;
-        const d = quote.d || 0;
-
         changePercentEl.innerText =
-        dp.toFixed(2) + "%";
+        changePercent.toFixed(2) + "%";
 
         changeAmountEl.innerText =
-        d.toFixed(2);
+        changeAmount.toFixed(2);
 
-        if(dp < 0){
+        if(changePercent < 0){
 
             changePercentEl.classList.add("down");
             changeAmountEl.classList.add("down");
@@ -441,13 +77,11 @@ async function fetchStock(input){
         }
 
         const yieldValue =
-        metric.dividendYieldIndicatedAnnual;
+        detail.dividendYield?.raw
+        ? detail.dividendYield.raw * 100
+        : 0;
 
-        if(
-        yieldValue !== undefined &&
-        yieldValue !== null &&
-        yieldValue !== 0
-        ){
+        if(yieldValue){
 
             row.querySelector(".yield")
             .innerText =
@@ -478,13 +112,9 @@ async function fetchStock(input){
         }
 
         const rate =
-        metric.dividendPerShareAnnual;
+        detail.dividendRate?.raw || 0;
 
-        if(
-        rate !== undefined &&
-        rate !== null &&
-        rate !== 0
-        ){
+        if(rate){
 
             row.querySelector(".rate")
             .innerText =
@@ -513,53 +143,18 @@ async function fetchStock(input){
 
         let freq = "-";
 
-        if(rate >= 10){
-            freq = "Monthly";
-        }else if(rate >= 1){
-            freq = "Quarterly";
-        }else if(rate > 0){
-            freq = "Yearly";
+        if(detail.dividendRate){
+
+            if(
+            detail.trailingAnnualDividendRate?.raw
+            ){
+
+                freq = "Quarterly";
+            }
         }
 
-        if(freq !== "-"){
-
-            row.querySelector(".freq")
-            .innerText = freq;
-
-        }else{
-
-            row.querySelector(".freq")
-            .innerHTML = `
-            <select
-            class="freqManual"
-            onchange="updateSummary()"
-            style="
-            width:110px;
-            padding:6px;
-            border-radius:8px;
-            border:1px solid #cbd5e1;
-            font-size:12px;
-            ">
-
-                <option value="None">
-                None
-                </option>
-
-                <option value="Monthly">
-                Monthly
-                </option>
-
-                <option value="Quarterly">
-                Quarterly
-                </option>
-
-                <option value="Yearly">
-                Yearly
-                </option>
-
-            </select>
-            `;
-        }
+        row.querySelector(".freq")
+        .innerText = freq;
 
         row.dataset.dividendYield =
         yieldValue || 0;
@@ -572,515 +167,6 @@ async function fetchStock(input){
 
         row.querySelector(".exchange")
         .innerText =
-        "API ERROR";
+        "YAHOO ERROR";
     }
 }
-
-function updatePortfolio(target){
-
-    const row =
-    target.closest("tr");
-
-    const buyPrice =
-    parseFloat(
-    row.querySelector(".buyPrice").value)
-    || 0;
-
-    const quantity =
-    parseFloat(
-    row.querySelector(".quantity").value)
-    || 0;
-
-    const currentPrice =
-    parseFloat(
-    row.querySelector(".price")
-    .innerText.replace("$",""))
-    || 0;
-
-    const buyTotal =
-    buyPrice * quantity;
-
-    const evalTotal =
-    currentPrice * quantity;
-
-    const profit =
-    evalTotal - buyTotal;
-
-    row.querySelector(".buyTotal")
-    .innerText =
-    "$" + buyTotal.toFixed(2);
-
-    row.querySelector(".evalTotal")
-    .innerText =
-    "$" + evalTotal.toFixed(2);
-
-    const profitCell =
-    row.querySelector(".profit");
-
-    if(profit >= 0){
-
-        profitCell.innerText =
-        "+$" + profit.toFixed(2);
-
-        profitCell.className =
-        "profit profit-plus";
-
-    }else{
-
-        profitCell.innerText =
-        "-$" + Math.abs(profit).toFixed(2);
-
-        profitCell.className =
-        "profit profit-minus";
-    }
-
-    updateSummary();
-}
-
-function updateSummary(){
-
-    let totalBuy = 0;
-    let totalEval = 0;
-    let totalDividend = 0;
-
-    document
-    .querySelectorAll("#stockBody tr")
-    .forEach(row=>{
-
-        const buy =
-        parseFloat(
-        row.querySelector(".buyTotal")
-        .innerText.replace("$",""))
-        || 0;
-
-        const evalv =
-        parseFloat(
-        row.querySelector(".evalTotal")
-        .innerText.replace("$",""))
-        || 0;
-
-        let yieldValue = 0;
-
-        const manualYield =
-        row.querySelector(".yieldManual");
-
-        if(manualYield){
-
-            yieldValue =
-            parseFloat(
-            manualYield.value || 0);
-
-        }else{
-
-            yieldValue =
-            parseFloat(
-            row.dataset.dividendYield || 0);
-        }
-
-        totalBuy += buy;
-        totalEval += evalv;
-
-        totalDividend +=
-        evalv * (yieldValue/100);
-
-    });
-
-    const profitRate =
-    totalBuy > 0
-    ? ((totalEval-totalBuy)
-/ totalBuy)*100
-    : 0;
-
-    document.getElementById(
-    "totalBuy").innerText =
-    "$" + totalBuy.toFixed(2);
-
-    document.getElementById(
-    "totalEval").innerText =
-    "$" + totalEval.toFixed(2);
-
-    const totalProfitElement =
-    document.getElementById(
-    "totalProfitRate");
-
-    totalProfitElement.innerText =
-    profitRate.toFixed(2) + "%";
-
-    if(profitRate < 0){
-
-        totalProfitElement.className =
-        "card-value total-profit-minus";
-
-    }else{
-
-        totalProfitElement.className =
-        "card-value total-profit-plus";
-    }
-
-    document.getElementById(
-    "yearlyDividend").innerText =
-    "$" + totalDividend.toFixed(2);
-
-    document.getElementById(
-    "monthlyDividend").innerText =
-    "$" +
-    (totalDividend/12).toFixed(2);
-}
-
-function collectRows(){
-
-    const rows = [];
-
-    document
-    .querySelectorAll("#stockBody tr")
-    .forEach(row=>{
-
-        rows.push({
-
-            ticker:
-            row.querySelector("input")
-            .value,
-
-            buyPrice:
-            row.querySelector(".buyPrice")
-            .value,
-
-            quantity:
-            row.querySelector(".quantity")
-            .value
-        });
-
-    });
-
-    return rows;
-}
-
-function saveCurrent(){
-
-    if(!currentSaveName){
-        saveAsData();
-        return;
-    }
-
-    localStorage.setItem(
-    "portfolio_" + currentSaveName,
-    JSON.stringify(collectRows()));
-
-    alert("저장 완료");
-}
-
-function saveAsData(){
-
-    const saveName =
-    prompt("저장 이름");
-
-    if(!saveName) return;
-
-    currentSaveName =
-    saveName;
-
-    localStorage.setItem(
-    "portfolio_" + saveName,
-    JSON.stringify(collectRows()));
-
-    alert("다른 이름 저장 완료");
-}
-
-function loadData(){
-
-    const keys =
-    Object.keys(localStorage)
-    .filter(k =>
-    k.startsWith("portfolio_"));
-
-    if(keys.length===0){
-
-        alert("저장 데이터 없음");
-        return;
-    }
-
-    const overlay =
-    document.createElement("div");
-
-    overlay.style = `
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,0.35);
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    z-index:9999;
-    `;
-
-    const modal =
-    document.createElement("div");
-
-    modal.style = `
-    background:white;
-    width:340px;
-    border-radius:20px;
-    padding:24px;
-    box-shadow:0 10px 30px rgba(0,0,0,0.2);
-    `;
-
-    modal.innerHTML = `
-
-    <h3 style="
-    margin-top:0;
-    margin-bottom:18px;
-    color:#2563eb;
-    ">
-    저장 목록
-    </h3>
-
-    <div id="saveList"></div>
-
-    <div style="
-    margin-top:20px;
-    text-align:right;
-    ">
-
-        <button id="closeModal">
-        닫기
-        </button>
-
-    </div>
-    `;
-
-    overlay.appendChild(modal);
-
-    document.body.appendChild(overlay);
-
-    const saveList =
-    modal.querySelector("#saveList");
-
-    keys.forEach(key=>{
-
-        const saveName =
-        key.replace("portfolio_","");
-
-        const item =
-        document.createElement("div");
-
-        item.innerText =
-        saveName;
-
-        item.style = `
-        padding:12px;
-        border:1px solid #dbe2f0;
-        border-radius:12px;
-        margin-bottom:10px;
-        cursor:pointer;
-        font-size:14px;
-        transition:0.2s;
-        `;
-
-        item.onmouseenter = ()=>{
-            item.style.background="#eff6ff";
-        };
-
-        item.onmouseleave = ()=>{
-            item.style.background="white";
-        };
-
-        item.onclick = ()=>{
-
-            const data =
-            JSON.parse(
-            localStorage.getItem(key));
-
-            currentSaveName =
-            saveName;
-
-            document.getElementById(
-            "stockBody").innerHTML = "";
-
-            data.forEach(item=>{
-                addRow(item);
-            });
-
-            document.body
-            .removeChild(overlay);
-        };
-
-        saveList.appendChild(item);
-    });
-
-modal.querySelector("#closeModal")
-.onclick = ()=>{
-
-    document.body
-    .removeChild(overlay);
-};
-
-overlay.appendChild(modal);
-
-document.body.appendChild(overlay);
-}
-
-function sortTable(columnIndex){
-
-    const tbody =
-    document.getElementById("stockBody");
-
-    const rows =
-    Array.from(tbody.querySelectorAll("tr"));
-
-    rows.sort((a,b)=>{
-
-        let aText =
-        a.children[columnIndex]
-        .innerText.replace(/[$,%+]/g,'');
-
-        let bText =
-        b.children[columnIndex]
-        .innerText.replace(/[$,%+]/g,'');
-
-        let aNum = parseFloat(aText);
-        let bNum = parseFloat(bText);
-
-        if(!isNaN(aNum) && !isNaN(bNum)){
-            return bNum - aNum;
-        }
-
-        return aText.localeCompare(bText);
-    });
-
-    tbody.innerHTML = "";
-
-    rows.forEach(row=>{
-        tbody.appendChild(row);
-    });
-}
-    
-function deleteData(){
-
-    const keys =
-    Object.keys(localStorage)
-    .filter(k =>
-    k.startsWith("portfolio_"));
-
-    if(keys.length === 0){
-
-        alert("삭제할 데이터 없음");
-        return;
-    }
-
-    const overlay =
-    document.createElement("div");
-
-    overlay.style.position = "fixed";
-    overlay.style.inset = "0";
-    overlay.style.background =
-    "rgba(0,0,0,0.35)";
-    overlay.style.display = "flex";
-    overlay.style.justifyContent =
-    "center";
-    overlay.style.alignItems =
-    "center";
-    overlay.style.zIndex = "9999";
-
-    const modal =
-    document.createElement("div");
-
-    modal.style.width = "360px";
-    modal.style.background = "white";
-    modal.style.borderRadius = "20px";
-    modal.style.padding = "24px";
-    modal.style.boxShadow =
-    "0 10px 30px rgba(0,0,0,0.2)";
-
-    const title =
-    document.createElement("h3");
-
-    title.innerText = "삭제할 저장 선택";
-
-    title.style.marginTop = "0";
-    title.style.marginBottom = "18px";
-    title.style.color = "#ef4444";
-
-    modal.appendChild(title);
-
-    keys.forEach(key=>{
-
-        const saveName =
-        key.replace("portfolio_","");
-
-        const item =
-        document.createElement("div");
-
-        item.innerText = saveName;
-
-        item.style.padding = "12px";
-        item.style.border =
-        "1px solid #dbe2f0";
-        item.style.borderRadius = "12px";
-        item.style.marginBottom = "10px";
-        item.style.cursor = "pointer";
-        item.style.fontSize = "14px";
-
-        item.onmouseenter = ()=>{
-
-            item.style.background =
-            "#fee2e2";
-        };
-
-        item.onmouseleave = ()=>{
-
-            item.style.background =
-            "white";
-        };
-
-        item.onclick = ()=>{
-
-            const confirmDelete =
-            confirm(
-            `"${saveName}" 삭제할까?`);
-
-            if(!confirmDelete) return;
-
-            localStorage.removeItem(key);
-
-            item.remove();
-
-            const remain =
-            Object.keys(localStorage)
-            .filter(k =>
-            k.startsWith("portfolio_"));
-
-            if(remain.length === 0){
-
-                document.body
-                .removeChild(overlay);
-            }
-        };
-
-        modal.appendChild(item);
-    });
-
-    const closeBtn =
-    document.createElement("button");
-
-    closeBtn.innerText = "닫기";
-
-    closeBtn.style.marginTop = "10px";
-
-    closeBtn.onclick = ()=>{
-
-        document.body
-        .removeChild(overlay);
-    };
-
-    modal.appendChild(closeBtn);
-
-    overlay.appendChild(modal);
-
-    document.body.appendChild(overlay);
-}
-    
-addRow({ticker:"NVDA"});
-
-</script>
-
-</body>
-</html>
