@@ -10,13 +10,23 @@ async function fetchStock(input){
 
     try{
 
+        const url =
+        `https://corsproxy.io/?https://query1.finance.yahoo.com/v10/finance/quoteSummary/${ticker}?modules=price,summaryDetail`;
+
         const res =
-        await fetch(
-        `https://query1.finance.yahoo.com/v10/finance/quoteSummary/${ticker}?modules=price,summaryDetail`
-        );
+        await fetch(url);
 
         const data =
         await res.json();
+
+        if(
+            !data.quoteSummary ||
+            !data.quoteSummary.result ||
+            !data.quoteSummary.result[0]
+        ){
+
+            throw new Error("No Data");
+        }
 
         const result =
         data.quoteSummary.result[0];
@@ -31,7 +41,7 @@ async function fetchStock(input){
         priceData.regularMarketPrice?.raw || 0;
 
         const prevClose =
-        detail.previousClose?.raw || 0;
+        detail.previousClose?.raw || currentPrice;
 
         const changeAmount =
         currentPrice - prevClose;
@@ -81,7 +91,7 @@ async function fetchStock(input){
         ? detail.dividendYield.raw * 100
         : 0;
 
-        if(yieldValue){
+        if(yieldValue > 0){
 
             row.querySelector(".yield")
             .innerText =
@@ -91,19 +101,24 @@ async function fetchStock(input){
 
             row.querySelector(".yield")
             .innerHTML = `
-            <div style="display:flex;justify-content:center;align-items:center;gap:4px;">
+            <div style="
+                display:flex;
+                justify-content:center;
+                align-items:center;
+                gap:4px;
+            ">
                 <input
                 class="yieldManual"
                 type="number"
                 step="0.01"
                 placeholder="0.00"
                 style="
-                width:70px;
-                padding:6px;
-                border-radius:8px;
-                border:1px solid #cbd5e1;
-                text-align:center;
-                font-size:12px;
+                    width:70px;
+                    padding:6px;
+                    border-radius:8px;
+                    border:1px solid #cbd5e1;
+                    text-align:center;
+                    font-size:12px;
                 "
                 oninput="updateSummary()">
                 <span>%</span>
@@ -114,7 +129,7 @@ async function fetchStock(input){
         const rate =
         detail.dividendRate?.raw || 0;
 
-        if(rate){
+        if(rate > 0){
 
             row.querySelector(".rate")
             .innerText =
@@ -130,12 +145,12 @@ async function fetchStock(input){
             step="0.01"
             placeholder="0.00"
             style="
-            width:70px;
-            padding:6px;
-            border-radius:8px;
-            border:1px solid #cbd5e1;
-            text-align:center;
-            font-size:12px;
+                width:70px;
+                padding:6px;
+                border-radius:8px;
+                border:1px solid #cbd5e1;
+                text-align:center;
+                font-size:12px;
             "
             oninput="updateSummary()">
             `;
@@ -143,14 +158,17 @@ async function fetchStock(input){
 
         let freq = "-";
 
-        if(detail.dividendRate){
+        if(rate >= 12){
 
-            if(
-            detail.trailingAnnualDividendRate?.raw
-            ){
+            freq = "Monthly";
 
-                freq = "Quarterly";
-            }
+        }else if(rate >= 1){
+
+            freq = "Quarterly";
+
+        }else if(rate > 0){
+
+            freq = "Yearly";
         }
 
         row.querySelector(".freq")
@@ -165,8 +183,13 @@ async function fetchStock(input){
 
         console.log(err);
 
+        row.querySelector(".stockName")
+        .innerText = "-";
+
         row.querySelector(".exchange")
-        .innerText =
-        "YAHOO ERROR";
+        .innerText = "YAHOO ERROR";
+
+        row.querySelector(".price")
+        .innerText = "$0.00";
     }
 }
