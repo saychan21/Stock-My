@@ -1,16 +1,12 @@
-
-
 <!DOCTYPE html>
 <html lang="ko">
 
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport"
-content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Dividend Tracker</title>
-
 
 <style>
 
@@ -303,69 +299,7 @@ onclick="toggleAllRows(this)">
 
 <script>
 
-
-const GITHUB_USER = "saychan21";
-const GITHUB_REPO = "Stock-My";
-const GITHUB_FILE = "portfolio.json";
-
-const GITHUB_TOKEN =
-"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";
-
-async function saveToGitHub(){
-
-    const data =
-    JSON.stringify(
-        collectRows(),
-        null,
-        2
-    );
-
-    const apiUrl =
-    `https://api.github.com/repos/${GITHUB_USER}/${GITHUB_REPO}/contents/${GITHUB_FILE}`;
-
-    let sha = "";
-
-    try{
-
-        const current =
-        await fetch(apiUrl,{
-            headers:{
-                Authorization:
-                `token ${GITHUB_TOKEN}`
-            }
-        });
-
-        const currentData =
-        await current.json();
-
-        sha = currentData.sha || "";
-
-    }catch(e){}
-
-    await fetch(apiUrl,{
-        method:"PUT",
-        headers:{
-            Authorization:
-            `token ${GITHUB_TOKEN}`,
-            "Content-Type":
-            "application/json"
-        },
-        body:JSON.stringify({
-            message:"update portfolio",
-            content:btoa(
-                unescape(
-                    encodeURIComponent(data)
-                )
-            ),
-            sha:sha
-        })
-    });
-
-    console.log("GitHub 저장 완료");
-}
-
 let currentSaveName = null;
-
 
 function addRow(data = {}){
 
@@ -450,77 +384,66 @@ async function fetchStock(input){
 
     try{
 
-const res =
+       const res =
 await fetch(
-"https://corsproxy.io/?" +
-encodeURIComponent(
-"https://query1.finance.yahoo.com/v7/finance/quote?symbols=" +
+"https://stock-yahoo-api.saychan21.workers.dev?ticker=" +
 ticker
-)
-);	  
-	  
+);
         const data =
         await res.json();
 
-if(
-!data.quoteResponse ||
-!data.quoteResponse.result ||
-!data.quoteResponse.result[0]
-){
-    throw new Error("Yahoo Data Error");
-}
+        if(
+        !data.quoteSummary ||
+        !data.quoteSummary.result ||
+        !data.quoteSummary.result[0]
+        ){
+            throw new Error("Yahoo Data Error");
+        }
 
-const result =
-data.quoteResponse.result[0];
+        const result =
+        data.quoteSummary.result[0];
 
-const currentPrice =
-result.regularMarketPrice || 0;
+        const quote = {
 
-const previousClose =
-result.regularMarketPreviousClose || 0;
+            c:
+            result.price.regularMarketPrice.raw,
 
-const quote = {
+            dp:
+            (
+                (
+                    result.price.regularMarketPrice.raw -
+                    result.summaryDetail.previousClose.raw
+                )
+                /
+                result.summaryDetail.previousClose.raw
+            ) * 100,
 
-    c: currentPrice,
+            d:
+            result.price.regularMarketPrice.raw -
+            result.summaryDetail.previousClose.raw
+        };
 
-    dp:
-    previousClose
-    ? (
-        (
-            currentPrice -
-            previousClose
-        )
-        /
-        previousClose
-    ) * 100
-    : 0,
+        const profile = {
 
-    d:
-    currentPrice -
-    previousClose
-};
+            name:
+            result.price.longName,
 
-const profile = {
+            exchange:
+            result.price.exchangeName
+        };
 
-    name:
-    result.longName || ticker,
+        const metric = {
 
-    exchange:
-    result.fullExchangeName || "-"
-};
+            dividendYieldIndicatedAnnual:
+            result.summaryDetail.dividendYield
+            ? result.summaryDetail.dividendYield.raw * 100
+            : 0,
 
-const metric = {
-
-    dividendYieldIndicatedAnnual:
-    result.trailingAnnualDividendYield
-    ? result.trailingAnnualDividendYield * 100
-    : 0,
-
-    dividendPerShareAnnual:
-    result.trailingAnnualDividendRate || 0
-};
-
-
+            dividendPerShareAnnual:
+            result.summaryDetail.dividendRate
+            ? result.summaryDetail.dividendRate.raw
+            : 0
+        };
 
         row.querySelector(".stockName")
         .innerText =
@@ -540,7 +463,7 @@ const metric = {
 
         row.querySelector(".changeAmount")
         .innerText =
-        "$" + (quote.d || 0).toFixed(2);
+        (quote.d || 0).toFixed(2);
 
         const yieldValue =
         metric.dividendYieldIndicatedAnnual || 0;
@@ -760,11 +683,18 @@ row.querySelector(
     return rows;
 }
 
-async function saveCurrent(){
+function saveCurrent(){
 
-    await saveToGitHub();
+    if(!currentSaveName){
+        saveAsData();
+        return;
+    }
 
-    alert("GitHub 저장 완료");
+    localStorage.setItem(
+    "portfolio_" + currentSaveName,
+    JSON.stringify(collectRows()));
+
+    alert("저장 완료");
 }
 
 function saveAsData(){
