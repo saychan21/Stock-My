@@ -382,6 +382,14 @@ ticker +
 const data =
 await res.json();
 
+if(
+!data.quoteSummary ||
+!data.quoteSummary.result ||
+!data.quoteSummary.result[0]
+){
+    throw new Error("Yahoo Data Error");
+}
+
 const result =
 data.quoteSummary.result[0];
 
