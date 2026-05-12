@@ -212,7 +212,7 @@ input{
         데이터 출처:
         <a href="https://finnhub.io"
         target="_blank">
-        Finnhub API
+        Yahoo Finance
         </a>
     </div>
 
@@ -369,29 +369,63 @@ async function fetchStock(input){
 
     try{
 
-        const quoteRes =
-        await fetch(
-        `https://finnhub.io/api/v1/quote?symbol=${ticker}&token=${API_KEY}`);
+const res =
+await fetch(
+"https://api.allorigins.win/raw?url=" +
+encodeURIComponent(
+"https://query1.finance.yahoo.com/v10/finance/quoteSummary/" +
+ticker +
+"?modules=price,summaryDetail"
+)
+);
 
-        const profileRes =
-        await fetch(
-        `https://finnhub.io/api/v1/stock/profile2?symbol=${ticker}&token=${API_KEY}`);
+const data =
+await res.json();
 
-        const metricRes =
-        await fetch(
-        `https://finnhub.io/api/v1/stock/metric?symbol=${ticker}&metric=all&token=${API_KEY}`);
+const result =
+data.quoteSummary.result[0];
 
-        const quote =
-        await quoteRes.json();
+const quote = {
 
-        const profile =
-        await profileRes.json();
+    c:
+    result.price.regularMarketPrice.raw,
 
-        const metricData =
-        await metricRes.json();
+    dp:
+    (
+        (
+            result.price.regularMarketPrice.raw -
+            result.summaryDetail.previousClose.raw
+        )
+        /
+        result.summaryDetail.previousClose.raw
+    ) * 100,
 
-        const metric =
-        metricData.metric || {};
+    d:
+    result.price.regularMarketPrice.raw -
+    result.summaryDetail.previousClose.raw
+};
+
+const profile = {
+
+    name:
+    result.price.longName,
+
+    exchange:
+    result.price.exchangeName
+};
+
+const metric = {
+
+    dividendYieldIndicatedAnnual:
+    result.summaryDetail.dividendYield
+    ? result.summaryDetail.dividendYield.raw * 100
+    : 0,
+
+    dividendPerShareAnnual:
+    result.summaryDetail.dividendRate
+    ? result.summaryDetail.dividendRate.raw
+    : 0
+};
 
         row.querySelector(".stockName")
         .innerText =
