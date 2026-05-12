@@ -359,7 +359,8 @@ fetchStock(
 row.querySelector(
 'input[list="tickerList"]'
 ));
-    }
+autoSave();
+
 }
 
 function handleEnter(event,input){
@@ -493,6 +494,7 @@ ticker
         yieldValue;
 
         updatePortfolio(row);
+		autoSave();
 
     }catch(err){
 
@@ -563,6 +565,7 @@ function updatePortfolio(target){
     }
 
     updateSummary();
+	autoSave();
 }
 
 function updateSummary(){
@@ -1002,6 +1005,7 @@ function deleteSelectedRows(){
     });
 
     updateSummary();
+	autoSave();
 }
 
 </script>
